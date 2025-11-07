@@ -16,6 +16,7 @@
     "docker:status": "cd apps/api/docker && docker compose ps"
   },
   "devDependencies": {
+    "patch-package": "^8.0.0",
     "prettier": "^3.6.2",
     "turbo": "^2.6.0",
     "typescript": "5.9.2"
