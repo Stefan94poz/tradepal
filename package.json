@@ -6,7 +6,14 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "check-types": "turbo run check-types",
+    "docker:up": "cd apps/api/docker && docker compose up -d",
+    "docker:down": "cd apps/api/docker && docker compose down",
+    "docker:logs": "cd apps/api/docker && docker compose logs -f",
+    "docker:build": "cd apps/api/docker && docker compose build",
+    "docker:clean": "cd apps/api/docker && docker compose down -v",
+    "docker:restart": "cd apps/api/docker && docker compose restart",
+    "docker:status": "cd apps/api/docker && docker compose ps"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

@@ -1,115 +1,164 @@
-# Turborepo starter
+# TradePal
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern e-commerce trading platform built with a monorepo architecture.
 
-## Using this example
+## Architecture
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
+This is a Turborepo monorepo containing:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+#### Applications
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- `api`: Medusa e-commerce backend (Node.js) with admin dashboard
+  - Built on [Medusa v2](https://medusajs.com)
+  - Provides REST APIs for products, cart, checkout, orders
+  - Includes admin dashboard for store management
+  - Runs on Docker with PostgreSQL and Redis
+- `web`: Next.js storefront application
 
-### Utilities
+#### Shared Packages
 
-This Turborepo has some additional tools already setup for you:
+- `@repo/ui`: Shared React component library
+- `@repo/eslint-config`: ESLint configurations
+- `@repo/typescript-config`: Shared TypeScript configurations
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Getting Started
+
+### Prerequisites
+
+- Node.js v20+
+- Yarn (configured as package manager)
+- Docker & Docker Compose (for Medusa API)
+
+### Development
+
+1. **Install dependencies:**
+   ```bash
+   yarn install
+   ```
+
+2. **Start Medusa API (Backend) with Docker:**
+   
+   From the root of the monorepo:
+   ```bash
+   # Using Makefile (recommended)
+   make docker-up
+   
+   # OR using yarn
+   yarn docker:up
+   ```
+
+   This starts the Medusa backend with PostgreSQL and Redis.
+
+3. **Run database migrations:**
+   ```bash
+   make db-migrate
+   ```
+
+4. **Create admin user:**
+   ```bash
+   make api-shell
+   # Inside the container:
+   npx medusa user -e admin@tradepal.com -p your-password
+   exit
+   ```
+
+5. **Start Next.js storefront:**
+   ```bash
+   cd apps/web
+   yarn dev
+   ```
+
+6. **Access the applications:**
+   - Medusa API: http://localhost:9000
+   - Medusa Admin: http://localhost:9000/app
+   - Web Storefront: http://localhost:3000
+
+### Docker Commands (from root)
+
+All Docker commands can be run from the root of the monorepo:
+
+```bash
+# Start containers
+make docker-up          # or: yarn docker:up
+
+# Stop containers
+make docker-down        # or: yarn docker:down
+
+# View logs
+make docker-logs        # or: yarn docker:logs
+
+# Rebuild containers
+make docker-build       # or: yarn docker:build
+
+# Clean up (removes volumes)
+make docker-clean       # or: yarn docker:clean
+
+# View all available commands
+make help
+```
+
+See [Docker Setup Documentation](./apps/api/docker/README.md) for more details.
 
 ### Build
 
 To build all apps and packages, run the following command:
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+```bash
 turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Utilities
+
+This monorepo includes:
+
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
+- [Turborepo](https://turbo.build/repo) for build orchestration
+- [Docker](https://www.docker.com/) for containerization
+
+## Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+tradepal/
+├── apps/
+│   ├── api/              # Medusa backend (Node.js + PostgreSQL + Redis)
+│   │   ├── src/
+│   │   │   ├── admin/    # Admin dashboard customizations
+│   │   │   ├── api/      # Custom API routes
+│   │   │   ├── modules/  # Custom business logic modules
+│   │   │   └── workflows/# Business workflows
+│   │   ├── docker/
+│   │   │   ├── docker-compose.yml
+│   │   │   ├── Dockerfile
+│   │   │   └── README.md
+│   │   └── medusa-config.ts
+│   └── web/              # Next.js storefront
+├── packages/
+│   ├── ui/               # Shared React components
+│   ├── eslint-config/    # Shared ESLint configs
+│   └── typescript-config/# Shared TypeScript configs
+├── Makefile              # Docker commands
+└── turbo.json            # Turborepo configuration
 ```
 
-### Develop
+## Documentation
 
-To develop all apps and packages, run the following command:
+- [API Documentation](./apps/api/README.md) - Medusa backend setup and usage
+- [Web Documentation](./apps/web/README.md) - Next.js storefront
 
-```
-cd my-turborepo
+## Resources
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+- [Medusa Documentation](https://docs.medusajs.com)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Turborepo Documentation](https://turbo.build/repo/docs)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## License
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+MIT
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
 
 Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
 
