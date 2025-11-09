@@ -26,9 +26,16 @@
   "dependencies": {
     "@medusajs/admin-sdk": "2.11.3",
     "@medusajs/cli": "2.11.3",
+    "@medusajs/file-local": "^2.11.3",
     "@medusajs/framework": "2.11.3",
     "@medusajs/medusa": "2.11.3",
-    "@sendgrid/mail": "^8.1.6"
+    "@sendgrid/mail": "^8.1.6",
+    "@types/multer": "^2.0.0",
+    "axios": "^1.13.2",
+    "meilisearch": "^0.54.0",
+    "minio": "^8.0.6",
+    "multer": "^2.0.2",
+    "posthog-node": "^5.11.2"
   },
   "devDependencies": {
     "@medusajs/test-utils": "2.11.3",

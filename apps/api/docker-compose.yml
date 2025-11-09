@@ -25,22 +25,58 @@ services:
     networks:
       - tradepal_network
 
+  # MeiliSearch
+  meilisearch:
+    image: getmeili/meilisearch:v1.5
+    container_name: tradepal_meilisearch
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=masterKey
+      - MEILI_ENV=development
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - tradepal_network
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: tradepal_minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - tradepal_network
+
   # Medusa Server
   # This service runs the Medusa backend application
   # and the admin dashboard.
   medusa:
     build: .
-    container_name: tradepal_backend
+    container_name: tradepal_medusa_backend
     restart: unless-stopped
     depends_on:
       - postgres
       - redis
+      - meilisearch
+      - minio
     ports:
-      - "9000:9000"
+      - "9002:9000"
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/tradepal-store
       - REDIS_URL=redis://redis:6379
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - MINIO_ENDPOINT=minio
     env_file:
       - .env
     volumes:
@@ -51,6 +87,8 @@ services:
 
 volumes:
   postgres_data:
+  meilisearch_data:
+  minio_data:
 
 networks:
   tradepal_network:

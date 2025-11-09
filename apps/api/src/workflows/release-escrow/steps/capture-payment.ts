@@ -12,8 +12,9 @@ export const capturePaymentStep = createStep(
   async (input: CapturePaymentStepInput, { container }) => {
     const { paymentIntentId, amount } = input;
 
-    const paymentModuleService: IPaymentModuleService =
-      container.resolve(Modules.PAYMENT);
+    const paymentModuleService: IPaymentModuleService = container.resolve(
+      Modules.PAYMENT
+    );
 
     try {
       // For Stripe, the payment session ID is the same as payment intent ID in many cases
@@ -37,6 +38,8 @@ export const capturePaymentStep = createStep(
   },
   async () => {
     // No compensation for capture - if capture fails, the payment intent remains authorized
-    console.log("[STRIPE] Payment capture failed, payment intent remains authorized");
+    console.log(
+      "[STRIPE] Payment capture failed, payment intent remains authorized"
+    );
   }
 );

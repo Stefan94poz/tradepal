@@ -13,8 +13,9 @@ export const processRefundStep = createStep(
   async (input: ProcessRefundStepInput, { container }) => {
     const { paymentIntentId, amount, reason } = input;
 
-    const paymentModuleService: IPaymentModuleService =
-      container.resolve(Modules.PAYMENT);
+    const paymentModuleService: IPaymentModuleService = container.resolve(
+      Modules.PAYMENT
+    );
 
     try {
       console.log(`[STRIPE] Processing refund for payment: ${paymentIntentId}`);

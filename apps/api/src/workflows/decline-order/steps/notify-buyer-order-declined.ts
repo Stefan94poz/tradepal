@@ -24,7 +24,9 @@ export const notifyBuyerOrderDeclinedStep = createStep(
         console.error("[EMAIL] Failed to send order declined email:", error);
       }
     } else {
-      console.log(`[NOTIFICATION] Order ${orderId} declined by seller ${sellerId}`);
+      console.log(
+        `[NOTIFICATION] Order ${orderId} declined by seller ${sellerId}`
+      );
       console.log(`[NOTIFICATION] Reason: ${reason}`);
       console.log(`[NOTIFICATION] Notifying buyer ${buyerId}`);
     }

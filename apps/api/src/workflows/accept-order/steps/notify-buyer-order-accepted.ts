@@ -18,13 +18,19 @@ export const notifyBuyerOrderAcceptedStep = createStep(
       try {
         const emailService = new EmailService();
         const orderUrl = `${process.env.STORE_URL || "http://localhost:3000"}/orders/${orderId}`;
-        await emailService.sendOrderAcceptedBuyer(buyerEmail, orderId, orderUrl);
+        await emailService.sendOrderAcceptedBuyer(
+          buyerEmail,
+          orderId,
+          orderUrl
+        );
         console.log(`[EMAIL] Order accepted email sent to ${buyerEmail}`);
       } catch (error) {
         console.error("[EMAIL] Failed to send order accepted email:", error);
       }
     } else {
-      console.log(`[NOTIFICATION] Order ${orderId} accepted by seller ${sellerId}`);
+      console.log(
+        `[NOTIFICATION] Order ${orderId} accepted by seller ${sellerId}`
+      );
       console.log(`[NOTIFICATION] Notifying buyer ${buyerId}`);
     }
 

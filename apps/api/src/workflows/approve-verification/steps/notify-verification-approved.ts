@@ -20,12 +20,19 @@ export const notifyVerificationApprovedStep = createStep(
         await emailService.sendVerificationApproved(userEmail, profileType);
         console.log(`[EMAIL] Verification approved email sent to ${userEmail}`);
       } catch (error) {
-        console.error("[EMAIL] Failed to send verification approved email:", error);
+        console.error(
+          "[EMAIL] Failed to send verification approved email:",
+          error
+        );
         // Don't throw - continue workflow even if email fails
       }
     } else {
-      console.log(`[NOTIFICATION] Verification approved for ${profileType} profile ${profileId}`);
-      console.log(`[NOTIFICATION] User email not provided, skipping email notification`);
+      console.log(
+        `[NOTIFICATION] Verification approved for ${profileType} profile ${profileId}`
+      );
+      console.log(
+        `[NOTIFICATION] User email not provided, skipping email notification`
+      );
     }
 
     return new StepResponse({

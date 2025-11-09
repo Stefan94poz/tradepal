@@ -13,16 +13,18 @@ export const holdPaymentStep = createStep(
   async (input: HoldPaymentStepInput, { container }) => {
     const { amount, currency, buyerId } = input;
 
-    const paymentModuleService: IPaymentModuleService =
-      container.resolve(Modules.PAYMENT);
+    const paymentModuleService: IPaymentModuleService = container.resolve(
+      Modules.PAYMENT
+    );
 
     try {
       // Create a payment collection for the escrow amount
-      const [paymentCollection] = await paymentModuleService.createPaymentCollections({
-        currency_code: currency,
-        amount,
-        // metadata: { buyer_id: buyerId },
-      } as any);
+      const [paymentCollection] =
+        await paymentModuleService.createPaymentCollections({
+          currency_code: currency,
+          amount,
+          // metadata: { buyer_id: buyerId },
+        } as any);
 
       // Create a payment session with Stripe provider
       const paymentSession = await paymentModuleService.createPaymentSession(
@@ -64,13 +66,17 @@ export const holdPaymentStep = createStep(
     }
   },
   async (compensationData, { container }) => {
-    if (!compensationData || compensationData.paymentCollectionId === "mock_collection") {
+    if (
+      !compensationData ||
+      compensationData.paymentCollectionId === "mock_collection"
+    ) {
       return;
     }
 
     const { paymentCollectionId, paymentSessionId } = compensationData;
-    const paymentModuleService: IPaymentModuleService =
-      container.resolve(Modules.PAYMENT);
+    const paymentModuleService: IPaymentModuleService = container.resolve(
+      Modules.PAYMENT
+    );
 
     try {
       // Cancel the payment session

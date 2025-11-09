@@ -2,7 +2,6 @@
 
 # Variables
 API_DIR := apps/api
-DOCKER_DIR := $(API_DIR)/docker
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -13,53 +12,53 @@ help: ## Show this help message
 # Docker Compose commands
 up: ## Start all Docker containers
 	@echo "🚀 Starting Docker containers..."
-	cd $(DOCKER_DIR) && docker compose up -d
-	@echo "✅ Containers started! Access Medusa at http://localhost:9000"
+	cd $(API_DIR) && docker compose up -d
+	@echo "✅ Containers started! Access Medusa at http://localhost:9002"
 
 down: ## Stop all Docker containers
 	@echo "🛑 Stopping Docker containers..."
-	cd $(DOCKER_DIR) && docker compose down
+	cd $(API_DIR) && docker compose down
 	@echo "✅ Containers stopped!"
 
 restart: ## Restart all Docker containers
 	@echo "🔄 Restarting Docker containers..."
-	cd $(DOCKER_DIR) && docker compose restart
+	cd $(API_DIR) && docker compose restart
 	@echo "✅ Containers restarted!"
 
 logs: ## Show logs from all containers
-	cd $(DOCKER_DIR) && docker compose logs -f
+	cd $(API_DIR) && docker compose logs -f
 
 build: ## Build Docker images
 	@echo "🔨 Building Docker images..."
-	cd $(DOCKER_DIR) && docker compose build
+	cd $(API_DIR) && docker compose build
 	@echo "✅ Build complete!"
 
 clean: ## Stop containers and remove volumes
 	@echo "🧹 Cleaning up Docker containers and volumes..."
-	cd $(DOCKER_DIR) && docker compose down -v
+	cd $(API_DIR) && docker compose down -v
 	@echo "✅ Cleanup complete!"
 
 # Service-specific commands
 api-shell: ## Open a shell in the Medusa container
-	docker exec -it tradepal_medusa sh
+	docker exec -it tradepal_medusa_backend sh
 
 api-logs: ## Show Medusa API logs
-	docker logs -f tradepal_medusa
+	docker logs -f tradepal_medusa_backend
 
 db-shell: ## Open PostgreSQL shell
-	docker exec -it tradepal_postgres psql -U postgres -d tradepal_medusa
+	docker exec -it tradepal_postgres psql -U postgres -d tradepal-store
 
 db-migrate: ## Run database migrations
-	docker exec -it tradepal_medusa yarn medusa db:migrate
+	docker exec -it tradepal_medusa_backend yarn medusa db:migrate
 
 db-reset: ## Reset database (Warning: destroys data!)
 	@echo "⚠️  This will destroy all data! Press Ctrl+C to cancel..."
 	@sleep 3
-	cd $(DOCKER_DIR) && docker compose down -v
-	cd $(DOCKER_DIR) && docker compose up -d postgres redis
+	cd $(API_DIR) && docker compose down -v
+	cd $(API_DIR) && docker compose up -d postgres redis
 	@echo "Waiting for database to be ready..."
 	@sleep 5
-	cd $(DOCKER_DIR) && docker compose up -d medusa
+	cd $(API_DIR) && docker compose up -d medusa
 
 redis-cli: ## Open Redis CLI
 	docker exec -it tradepal_redis redis-cli
@@ -83,4 +82,4 @@ rebuild: ## Rebuild and restart containers
 # Quick status check
 status: ## Show status of all containers
 	@echo "📊 Container Status:"
-	cd $(DOCKER_DIR) && docker compose ps
+	cd $(API_DIR) && docker compose ps

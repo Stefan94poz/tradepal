@@ -7,7 +7,8 @@ import sgMail from "@sendgrid/mail";
 
 // Initialize SendGrid with API key from environment
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || "";
-const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "noreply@tradepal.com";
+const SENDGRID_FROM_EMAIL =
+  process.env.SENDGRID_FROM_EMAIL || "noreply@tradepal.com";
 
 if (SENDGRID_API_KEY) {
   sgMail.setApiKey(SENDGRID_API_KEY);
@@ -37,8 +38,12 @@ interface EmailData {
  */
 export async function sendEmail(data: EmailData): Promise<void> {
   if (!SENDGRID_API_KEY) {
-    console.warn("[EMAIL SERVICE] SendGrid API key not configured. Email not sent.");
-    console.log(`[EMAIL SERVICE] Would send email to ${data.to}: ${data.subject}`);
+    console.warn(
+      "[EMAIL SERVICE] SendGrid API key not configured. Email not sent."
+    );
+    console.log(
+      `[EMAIL SERVICE] Would send email to ${data.to}: ${data.subject}`
+    );
     return;
   }
 
@@ -216,11 +221,7 @@ export class EmailService {
     });
   }
 
-  async sendOrderDeclinedBuyer(
-    email: string,
-    orderId: string,
-    reason: string
-  ) {
+  async sendOrderDeclinedBuyer(email: string, orderId: string, reason: string) {
     return sendEmail({
       to: email,
       subject: `Order #${orderId} Declined - TradePal`,

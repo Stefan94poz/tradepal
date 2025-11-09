@@ -33,22 +33,29 @@ module.exports = defineConfig({
     {
       resolve: "./modules/shipment",
     },
-    {
-      resolve: "@medusajs/medusa/payment",
-      options: {
-        providers: [
+    // TODO: Add real Stripe API keys to .env file!
+    // Get keys from: https://dashboard.stripe.com/test/apikeys
+    // Required: STRIPE_API_KEY (sk_test_...) and STRIPE_WEBHOOK_SECRET (whsec_...)
+    ...(process.env.STRIPE_API_KEY
+      ? [
           {
-            resolve: "@medusajs/medusa/payment-stripe",
-            id: "stripe",
+            resolve: "@medusajs/medusa/payment",
             options: {
-              apiKey: process.env.STRIPE_API_KEY,
-              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-              // Automatic capture is disabled for escrow - we hold and capture manually
-              capture: false,
+              providers: [
+                {
+                  resolve: "@medusajs/medusa/payment-stripe",
+                  id: "stripe",
+                  options: {
+                    apiKey: process.env.STRIPE_API_KEY,
+                    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+                    // Automatic capture is disabled for escrow - we hold and capture manually
+                    capture: false,
+                  },
+                },
+              ],
             },
           },
-        ],
-      },
-    },
+        ]
+      : []),
   ],
 });

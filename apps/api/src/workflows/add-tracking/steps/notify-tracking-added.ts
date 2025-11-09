@@ -32,7 +32,9 @@ export const notifyTrackingAddedStep = createStep(
       }
     } else {
       console.log(`[NOTIFICATION] Tracking added for order ${orderId}`);
-      console.log(`[NOTIFICATION] Carrier: ${carrier}, Tracking: ${trackingNumber}`);
+      console.log(
+        `[NOTIFICATION] Carrier: ${carrier}, Tracking: ${trackingNumber}`
+      );
     }
 
     return new StepResponse({

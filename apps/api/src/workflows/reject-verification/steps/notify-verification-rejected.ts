@@ -18,16 +18,27 @@ export const notifyVerificationRejectedStep = createStep(
     if (userEmail) {
       try {
         const emailService = new EmailService();
-        await emailService.sendVerificationRejected(userEmail, profileType, reason);
+        await emailService.sendVerificationRejected(
+          userEmail,
+          profileType,
+          reason
+        );
         console.log(`[EMAIL] Verification rejected email sent to ${userEmail}`);
       } catch (error) {
-        console.error("[EMAIL] Failed to send verification rejected email:", error);
+        console.error(
+          "[EMAIL] Failed to send verification rejected email:",
+          error
+        );
         // Don't throw - continue workflow even if email fails
       }
     } else {
-      console.log(`[NOTIFICATION] Verification rejected for ${profileType} profile ${profileId}`);
+      console.log(
+        `[NOTIFICATION] Verification rejected for ${profileType} profile ${profileId}`
+      );
       console.log(`[NOTIFICATION] Reason: ${reason}`);
-      console.log(`[NOTIFICATION] User email not provided, skipping email notification`);
+      console.log(
+        `[NOTIFICATION] User email not provided, skipping email notification`
+      );
     }
 
     return new StepResponse({

@@ -1,106 +1,105 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import { Modules } from "@medusajs/framework/utils";
+import MeiliSearchService from "../../../../services/meilisearch";
 
 /**
  * GET /store/products/search
- * Global product search with B2B filters
- * 
+ * Global product search with B2B filters using MeiliSearch
+ *
  * Query parameters:
  * - q: Search query (name, description)
- * - category_id: Filter by category
+ * - collection_id: Filter by collection
  * - min_price: Minimum price
  * - max_price: Maximum price
  * - seller_location: Filter by seller country/city
  * - min_order_qty: Filter by minimum order quantity
+ * - seller_id: Filter by seller
+ * - is_verified: Filter by verified sellers (true/false)
+ * - sort: Sort field (created_at:desc, variants.prices.amount:asc, etc.)
  * - page: Page number (default: 1)
  * - limit: Items per page (default: 20)
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
     const {
-      q,
-      category_id,
+      q = "",
+      collection_id,
       min_price,
       max_price,
       seller_location,
       min_order_qty,
+      seller_id,
+      is_verified,
+      sort,
       page = "1",
       limit = "20",
     } = req.query as {
       q?: string;
-      category_id?: string;
+      collection_id?: string;
       min_price?: string;
       max_price?: string;
       seller_location?: string;
       min_order_qty?: string;
+      seller_id?: string;
+      is_verified?: string;
+      sort?: string;
       page?: string;
       limit?: string;
     };
 
-    const productModuleService = req.scope.resolve(Modules.PRODUCT);
-
-    // Build filters
-    const filters: any = {
-      status: "published", // Only show published products
-    };
-
-    if (q) {
-      // Text search in title and description
-      filters.$or = [
-        { title: { $ilike: `%${q}%` } },
-        { description: { $ilike: `%${q}%` } },
-      ];
-    }
-
-    if (category_id) {
-      filters.category_id = category_id;
-    }
-
-    // TODO: Price filtering requires querying variant prices
-    // This will be implemented after MeiliSearch integration (Task 7.3.1)
+    const meilisearchService = new MeiliSearchService();
 
     // Pagination
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     const offset = (pageNum - 1) * limitNum;
 
-    // Retrieve products
-    const [products, count] = await productModuleService.listAndCountProducts(
-      filters,
-      {
-        skip: offset,
-        take: limitNum,
-        relations: ["variants", "images", "categories"],
-      }
-    );
+    // Build filters for MeiliSearch
+    const filters: any = {
+      limit: limitNum,
+      offset,
+    };
 
-    // Filter by B2B metadata fields (min_order_qty, seller_location)
-    // This is done in-memory until MeiliSearch is integrated
-    let filteredProducts = products;
-
-    if (min_order_qty) {
-      const minQty = parseInt(min_order_qty, 10);
-      filteredProducts = filteredProducts.filter((product) => {
-        const metadata = product.metadata as any;
-        const productMinQty = metadata?.min_order_qty || 1;
-        return productMinQty <= minQty;
-      });
+    if (collection_id) {
+      filters.collection_id = collection_id;
     }
 
     if (seller_location) {
-      filteredProducts = filteredProducts.filter((product) => {
-        const metadata = product.metadata as any;
-        const location = metadata?.seller_location || "";
-        return location.toLowerCase().includes(seller_location.toLowerCase());
-      });
+      filters.seller_location = seller_location;
     }
 
+    if (min_order_qty) {
+      filters.min_order_quantity = parseInt(min_order_qty, 10);
+    }
+
+    if (seller_id) {
+      filters.seller_id = seller_id;
+    }
+
+    if (is_verified !== undefined) {
+      filters.is_verified = is_verified === "true";
+    }
+
+    if (min_price) {
+      filters.price_min = parseInt(min_price, 10) * 100; // Convert to cents
+    }
+
+    if (max_price) {
+      filters.price_max = parseInt(max_price, 10) * 100; // Convert to cents
+    }
+
+    if (sort) {
+      filters.sort = sort;
+    }
+
+    // Search using MeiliSearch
+    const results = await meilisearchService.searchProducts(q, filters);
+
     res.json({
-      products: filteredProducts,
-      count: filteredProducts.length,
+      products: results.hits,
+      count: results.total,
       page: pageNum,
       limit: limitNum,
-      total_pages: Math.ceil(count / limitNum),
+      total_pages: Math.ceil((results.total || 0) / limitNum),
     });
   } catch (error) {
     res.status(500).json({
