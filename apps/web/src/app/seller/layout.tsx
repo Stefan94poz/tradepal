@@ -34,7 +34,9 @@ export default function SellerLayout({
     <div className="flex h-screen bg-slate-50">
       {/* Mobile menu button */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white border-b border-slate-200 p-4 md:hidden">
-        <h1 className="text-lg font-semibold text-slate-900">Seller Dashboard</h1>
+        <h1 className="text-lg font-semibold text-slate-900">
+          Seller Dashboard
+        </h1>
         <Button
           variant="ghost"
           size="icon"

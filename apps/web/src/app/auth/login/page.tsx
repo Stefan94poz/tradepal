@@ -32,12 +32,14 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      
+
       // Redirect to original page or homepage
       const redirect = searchParams.get("redirect") || "/";
       router.push(redirect);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid email or password");
+      setError(
+        err instanceof Error ? err.message : "Invalid email or password"
+      );
     } finally {
       setLoading(false);
     }

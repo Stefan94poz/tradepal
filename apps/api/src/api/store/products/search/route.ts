@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import { B2B_PRODUCT_MODULE } from "../../../../modules/b2b-product";
-import B2BProductConfigService from "../../../../modules/b2b-product/service";
+import { B2B_PRODUCT_MODULE } from "../../../../modules/b2b_product";
+import B2BProductConfigService from "../../../../modules/b2b_product/service";
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const {

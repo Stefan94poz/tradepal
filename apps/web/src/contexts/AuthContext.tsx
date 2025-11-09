@@ -46,11 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
 
     // Set up automatic token refresh every 5 minutes
-    const refreshInterval = setInterval(() => {
-      if (user) {
-        refreshUser();
-      }
-    }, 5 * 60 * 1000); // 5 minutes
+    const refreshInterval = setInterval(
+      () => {
+        if (user) {
+          refreshUser();
+        }
+      },
+      5 * 60 * 1000
+    ); // 5 minutes
 
     return () => clearInterval(refreshInterval);
   }, [user]);

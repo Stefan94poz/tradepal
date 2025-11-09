@@ -190,9 +190,7 @@ export const partnerApi = {
     limit?: number;
     offset?: number;
   }) => {
-    const queryString = new URLSearchParams(
-      params as Record<string, string>
-    );
+    const queryString = new URLSearchParams(params as Record<string, string>);
     return apiFetch(`/store/partners/search?${queryString}`);
   },
 
@@ -256,14 +254,11 @@ export const profileApi = {
             ?.split("=")[1]
         : undefined;
 
-    const response = await fetch(
-      `${MEDUSA_API_URL}/store/profile/documents`,
-      {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      }
-    );
+    const response = await fetch(`${MEDUSA_API_URL}/store/profile/documents`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
 
     if (!response.ok) {
       throw new Error("Failed to upload document");
@@ -280,7 +275,11 @@ export const notificationApi = {
   /**
    * Get user notifications
    */
-  list: async (params?: { limit?: number; offset?: number; unread?: boolean }) => {
+  list: async (params?: {
+    limit?: number;
+    offset?: number;
+    unread?: boolean;
+  }) => {
     const queryString = params
       ? `?${new URLSearchParams(params as Record<string, string>)}`
       : "";

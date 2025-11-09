@@ -2,10 +2,10 @@ import type {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http";
-import { PARTNER_DIRECTORY_MODULE } from "../../../../modules/partner-directory";
-import { USER_PROFILE_MODULE } from "../../../../modules/user-profile";
-import PartnerDirectoryModuleService from "../../../../modules/partner-directory/service";
-import UserProfileModuleService from "../../../../modules/user-profile/service";
+import { PARTNER_DIRECTORY_MODULE } from "../../../../modules/partner_directory";
+import { USER_PROFILE_MODULE } from "../../../../modules/user_profile";
+import PartnerDirectoryModuleService from "../../../../modules/partner_directory/service";
+import UserProfileModuleService from "../../../../modules/user_profile/service";
 
 type PartnerProfileRequest = {
   company_name: string;

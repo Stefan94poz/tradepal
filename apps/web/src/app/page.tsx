@@ -65,14 +65,17 @@ export default function HomePage() {
   };
 
   const filteredProducts = products.filter((product) => {
-    if (searchQuery && !product.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (
+      searchQuery &&
+      !product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
       return false;
     }
-    
+
     if (priceRange.min || priceRange.max) {
       const price = product.variants?.[0]?.prices?.[0]?.amount || 0;
       const priceInDollars = price / 100;
-      
+
       if (priceRange.min && priceInDollars < parseFloat(priceRange.min)) {
         return false;
       }
@@ -80,7 +83,7 @@ export default function HomePage() {
         return false;
       }
     }
-    
+
     return true;
   });
 
@@ -122,7 +125,8 @@ export default function HomePage() {
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
                 Connect with verified suppliers, discover quality products, and
-                grow your business with TradePal&apos;s comprehensive B2B platform.
+                grow your business with TradePal&apos;s comprehensive B2B
+                platform.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Link href="/products">
@@ -157,7 +161,9 @@ export default function HomePage() {
                   <h3 className="mb-2 text-lg font-semibold text-slate-900">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-slate-600">{feature.description}</p>
+                  <p className="text-sm text-slate-600">
+                    {feature.description}
+                  </p>
                 </div>
               ))}
             </div>
@@ -290,7 +296,8 @@ export default function HomePage() {
             ) : (
               <>
                 <div className="mb-4 text-sm text-slate-600">
-                  Showing {filteredProducts.length} of {products.length} products
+                  Showing {filteredProducts.length} of {products.length}{" "}
+                  products
                 </div>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredProducts.map((product) => (

@@ -2,8 +2,8 @@ import type {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http";
-import { FILE_STORAGE_MODULE } from "../../../../../modules/file-storage";
-import FileStorageService from "../../../../../modules/file-storage/service";
+import { FILE_STORAGE_MODULE } from "../../../../../modules/file_storage";
+import FileStorageService from "../../../../../modules/file_storage/service";
 import formidable from "formidable";
 import fs from "fs";
 

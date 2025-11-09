@@ -20,7 +20,6 @@ const Notification = model.define("notification", {
   data: model.json().nullable(),
   read: model.boolean().default(false),
   email_sent: model.boolean().default(false),
-  created_at: model.dateTime().default(new Date()),
   read_at: model.dateTime().nullable(),
 });
 

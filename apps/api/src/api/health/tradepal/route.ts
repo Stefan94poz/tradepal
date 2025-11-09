@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import { USER_PROFILE_MODULE } from "../../../modules/user-profile";
-import { PARTNER_DIRECTORY_MODULE } from "../../../modules/partner-directory";
+import { USER_PROFILE_MODULE } from "../../../modules/user_profile";
+import { PARTNER_DIRECTORY_MODULE } from "../../../modules/partner_directory";
 import { ESCROW_MODULE } from "../../../modules/escrow";
 import { SHIPMENT_MODULE } from "../../../modules/shipment";
 

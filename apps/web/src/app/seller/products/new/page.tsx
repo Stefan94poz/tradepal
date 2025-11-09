@@ -51,10 +51,10 @@ export default function NewProductPage() {
     try {
       // TODO: Implement product creation API call
       // await productApi.create(formData);
-      
+
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       router.push("/seller/products");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");

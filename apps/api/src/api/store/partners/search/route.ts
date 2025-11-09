@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import { PARTNER_DIRECTORY_MODULE } from "../../../../modules/partner-directory";
-import PartnerDirectoryModuleService from "../../../../modules/partner-directory/service";
+import { PARTNER_DIRECTORY_MODULE } from "../../../../modules/partner_directory";
+import PartnerDirectoryModuleService from "../../../../modules/partner_directory/service";
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const partnerService: PartnerDirectoryModuleService = req.scope.resolve(

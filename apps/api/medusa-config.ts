@@ -19,10 +19,10 @@ module.exports = defineConfig({
   },
   modules: [
     {
-      resolve: "./src/modules/user-profile",
+      resolve: "./src/modules/user_profile",
     },
     {
-      resolve: "./src/modules/partner-directory",
+      resolve: "./src/modules/partner_directory",
     },
     {
       resolve: "./src/modules/escrow",
@@ -31,10 +31,10 @@ module.exports = defineConfig({
       resolve: "./src/modules/shipment",
     },
     {
-      resolve: "./src/modules/b2b-product",
+      resolve: "./src/modules/b2b_product",
     },
     {
-      resolve: "./src/modules/file-storage",
+      resolve: "./src/modules/file_storage",
     },
     {
       resolve: "./src/modules/search",
@@ -42,21 +42,22 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/notification",
     },
-    {
-      resolve: "@medusajs/medusa/payment",
-      options: {
-        providers: [
-          {
-            resolve: "@medusajs/medusa/payment-stripe",
-            id: "stripe",
-            options: {
-              apiKey: process.env.STRIPE_API_KEY,
-              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-              capture: false, // Manual capture for escrow
-            },
-          },
-        ],
-      },
-    },
+    // Stripe Payment (Optional - uncomment when you have API keys)
+    // {
+    //   resolve: "@medusajs/medusa/payment",
+    //   options: {
+    //     providers: [
+    //       {
+    //         resolve: "@medusajs/medusa/payment-stripe",
+    //         id: "stripe",
+    //         options: {
+    //           apiKey: process.env.STRIPE_API_KEY,
+    //           webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    //           capture: false, // Manual capture for escrow
+    //         },
+    //       },
+    //     ],
+    //   },
+    // },
   ],
 });

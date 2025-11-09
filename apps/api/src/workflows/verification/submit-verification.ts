@@ -4,8 +4,8 @@ import {
   createWorkflow,
   WorkflowResponse,
 } from "@medusajs/framework/workflows-sdk";
-import { USER_PROFILE_MODULE } from "../../modules/user-profile";
-import UserProfileModuleService from "../../modules/user-profile/service";
+import { USER_PROFILE_MODULE } from "../../modules/user_profile";
+import UserProfileModuleService from "../../modules/user_profile/service";
 
 type SubmitVerificationInput = {
   userId: string;
