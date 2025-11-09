@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
  * Protected routes that require authentication
  */
 const protectedRoutes = [
+  "/seller",
   "/cart",
   "/checkout",
   "/orders",
@@ -26,12 +27,18 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = !!token;
 
   // Redirect authenticated users away from auth pages
-  if (isAuthenticated && authRoutes.some((route) => pathname.startsWith(route))) {
+  if (
+    isAuthenticated &&
+    authRoutes.some((route) => pathname.startsWith(route))
+  ) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   // Redirect unauthenticated users to login for protected routes
-  if (!isAuthenticated && protectedRoutes.some((route) => pathname.startsWith(route))) {
+  if (
+    !isAuthenticated &&
+    protectedRoutes.some((route) => pathname.startsWith(route))
+  ) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
