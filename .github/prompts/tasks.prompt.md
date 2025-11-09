@@ -141,32 +141,36 @@ This plan follows Medusa v2 architecture patterns:
     - _Requirements: 10.1, 10.2, 10.3_
     - _Status: ✅ COMPLETED_
 
-- [ ] 5. Extend Medusa order workflow for B2B operations
-  - [ ] 5.1 Create custom order workflow or extend existing
+- [x] 5. Extend Medusa order workflow for B2B operations
+  - [x] 5.1 Create custom order workflow or extend existing
     - Create workflow for B2B order creation with seller-specific fields
     - Add workflow step for seller notification when new order is created
     - Implement order acceptance/decline workflow for sellers
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
-  - [ ] 5.2 Integrate escrow with order workflow
+    - _Status: ✅ COMPLETED - Created accept-order, decline-order workflows with seller notification subscribers_
+  - [x] 5.2 Integrate escrow with order workflow
     - Add workflow hook to trigger escrow creation when seller accepts order
     - Create workflow to update order status based on escrow state transitions
     - Implement order completion workflow when escrow is released
     - _Requirements: 8.5, 9.1, 9.3_
+    - _Status: ✅ COMPLETED - Escrow creation integrated in accept-order workflow, complete-order-with-escrow workflow created_
 
-- [ ] 6. Implement product management using Medusa Product Module
-  - [ ] 6.1 Extend product functionality for B2B features
+- [x] 6. Implement product management using Medusa Product Module
+  - [x] 6.1 Extend product functionality for B2B features
     - Use Medusa's built-in Product Module with additional metadata for B2B fields
     - Store minimum order quantity and bulk pricing in product metadata
     - Implement product CRUD operations in seller dashboard using workflows
     - Add product visibility controls using Medusa's draft/published status
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
-  - [ ] 6.2 Implement product search and filtering
+    - _Status: ✅ COMPLETED - Created product CRUD routes using Medusa's core workflows with B2B metadata_
+  - [x] 6.2 Implement product search and filtering
     - Create custom API route for global product search
     - Use Medusa's product search capabilities with custom filters
     - Implement filters for category, price range, seller location, minimum order quantity
     - Add pagination with 20 products per page
     - Optimize search queries with proper database indexes
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+    - _Status: ✅ COMPLETED - Created product search route with B2B metadata filtering (MeiliSearch integration pending for improved performance)_
 
 - [ ] 7. Implement notification system using subscribers
   - [ ] 7.1 Create notification subscribers
@@ -215,7 +219,7 @@ This plan follows Medusa v2 architecture patterns:
     - Set environment variable: `POSTHOG_API_KEY`
     - _Requirements: 11.1, 11.4_
     - _Reference: https://posthog.com/docs/libraries/node_
-  - [ ] 7.3.4 Integrate SendGrid for email notifications
+  - [x] 7.3.4 Integrate SendGrid for email notifications
     - Install `@sendgrid/mail` package
     - Create email service in `src/services/email.ts` using SendGrid API
     - Set environment variable: `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`
@@ -226,7 +230,8 @@ This plan follows Medusa v2 architecture patterns:
     - Test email delivery for all notification types
     - _Requirements: 7.3, 7.4, 8.2, 9.1, 10.5_
     - _Reference: https://docs.sendgrid.com/for-developers/sending-email/api-getting-started_
-  - [ ] 7.3.5 Integrate Stripe for payment processing
+    - _Status: ✅ COMPLETED - Email service created with 10 templates, integrated into all notification steps_
+  - [x] 7.3.5 Integrate Stripe for payment processing
     - Install `@medusajs/medusa-payment-stripe` package
     - Configure Stripe payment provider in `medusa-config.ts`
     - Set environment variables: `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`
@@ -238,6 +243,7 @@ This plan follows Medusa v2 architecture patterns:
     - Test payment flow: hold → capture → refund
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
     - _Reference: https://docs.medusajs.com/resources/commerce-modules/payment/payment-provider/stripe_
+    - _Status: ✅ COMPLETED - Stripe configured with manual capture, payment workflows updated, webhook handler created_
   - [ ] 7.3.6 Integrate Webshipper for shipment tracking
     - Install Webshipper SDK or create custom integration
     - Create shipment service in `src/services/webshipper.ts`

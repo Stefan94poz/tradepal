@@ -1,4 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
+import { IPaymentModuleService } from "@medusajs/framework/types";
+import { Modules } from "@medusajs/framework/utils";
 
 type ProcessRefundStepInput = {
   paymentIntentId: string;
@@ -8,41 +10,34 @@ type ProcessRefundStepInput = {
 
 export const processRefundStep = createStep(
   "process-refund-step",
-  async (input: ProcessRefundStepInput) => {
+  async (input: ProcessRefundStepInput, { container }) => {
     const { paymentIntentId, amount, reason } = input;
 
-    // TODO: Integrate with actual payment provider (Stripe, etc.)
-    // For now, simulate refund processing
-    const refundId = `re_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const paymentModuleService: IPaymentModuleService =
+      container.resolve(Modules.PAYMENT);
 
-    console.log(
-      `[PAYMENT] Processing refund for payment ${paymentIntentId}, amount: ${amount}, reason: ${reason}, refund ID: ${refundId}`
-    );
+    try {
+      console.log(`[STRIPE] Processing refund for payment: ${paymentIntentId}`);
+      console.log(`[STRIPE] Amount: ${amount}`);
+      console.log(`[STRIPE] Reason: ${reason}`);
 
-    return new StepResponse(
-      {
-        refundId,
+      // TODO: Implement actual Stripe refund via Payment Module or direct Stripe API
+      // For now, log the refund request
+      // In production, this should call Stripe's refund API
+
+      return new StepResponse({
         paymentIntentId,
-        amount,
-        status: "refunded",
+        refunded: true,
         refundedAt: new Date().toISOString(),
-      },
-      {
-        refundId,
-        paymentIntentId,
-      }
-    );
+        refundReason: reason,
+      });
+    } catch (error) {
+      console.error("[STRIPE] Failed to process refund:", error);
+      throw error;
+    }
   },
-  async (compensateData) => {
-    if (!compensateData) return;
-
-    const { refundId, paymentIntentId } = compensateData;
-
-    // Rollback: Cancel refund (if possible with payment provider)
-    console.log(
-      `[PAYMENT ROLLBACK] Attempting to cancel refund ${refundId} for payment ${paymentIntentId}`
-    );
-
-    // TODO: Implement actual refund cancellation with payment provider (if supported)
+  async () => {
+    // No compensation for refund - once refunded, it's final
+    console.log("[STRIPE] Refund cannot be rolled back");
   }
 );

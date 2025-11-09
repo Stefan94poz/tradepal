@@ -13228,6 +13228,7 @@ __metadata:
     "@medusajs/framework": "npm:2.11.3"
     "@medusajs/medusa": "npm:2.11.3"
     "@medusajs/test-utils": "npm:2.11.3"
+    "@sendgrid/mail": "npm:^8.1.6"
     "@swc/core": "npm:1.5.7"
     "@swc/jest": "npm:^0.2.36"
     "@types/jest": "npm:^29.5.13"

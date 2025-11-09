@@ -1,6 +1,7 @@
 import {
   createWorkflow,
   WorkflowResponse,
+  transform,
 } from "@medusajs/framework/workflows-sdk";
 import { holdPaymentStep } from "./steps/hold-payment";
 import { createEscrowRecordStep } from "./steps/create-escrow-record";
@@ -23,6 +24,11 @@ export const createEscrowWorkflow = createWorkflow(
       buyerId: input.buyerId,
     });
 
+    // Transform payment data to extract paymentIntentId
+    const paymentIntentId = transform({ payment }, (data) => {
+      return data.payment.paymentIntentId || "";
+    });
+
     // Step 2: Create escrow record
     const escrow = createEscrowRecordStep({
       orderId: input.orderId,
@@ -30,7 +36,7 @@ export const createEscrowWorkflow = createWorkflow(
       sellerId: input.sellerId,
       amount: input.amount,
       currency: input.currency,
-      paymentIntentId: payment.paymentIntentId,
+      paymentIntentId: paymentIntentId as any,
     });
 
     return new WorkflowResponse({
