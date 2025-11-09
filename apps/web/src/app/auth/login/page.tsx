@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +32,10 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push("/"); // Redirect to homepage after successful login
+      
+      // Redirect to original page or homepage
+      const redirect = searchParams.get("redirect") || "/";
+      router.push(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
@@ -85,7 +89,7 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
             <p className="text-center text-sm text-slate-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/auth/register"
                 className="font-medium text-primary-600 hover:text-primary-500"

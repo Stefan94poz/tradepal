@@ -44,7 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check authentication status on mount
   useEffect(() => {
     checkAuth();
-  }, []);
+
+    // Set up automatic token refresh every 5 minutes
+    const refreshInterval = setInterval(() => {
+      if (user) {
+        refreshUser();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [user]);
 
   const checkAuth = async () => {
     try {
@@ -77,13 +86,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await authApi.logout();
-    setUser(null);
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
 
-    // Clear token cookie
-    if (typeof document !== "undefined") {
-      document.cookie =
-        "medusa_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      // Clear token cookie
+      if (typeof document !== "undefined") {
+        document.cookie =
+          "medusa_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      }
+
+      // Redirect to login page
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth/login";
+      }
     }
   };
 
