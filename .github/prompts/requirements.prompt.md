@@ -6,139 +6,165 @@ mode: agent
 
 ## Introduction
 
-Trade-Pal is a global B2B marketplace platform that connects retailers and businesses with trusted suppliers from around the world. The platform addresses the fragmentation in the current B2B wholesale market by providing a unified, intuitive interface for discovering suppliers, managing negotiations, and conducting secure transactions. The MVP focuses on core marketplace functionality including user profiles, authentication, product discovery, and pitch management.
+This document specifies the requirements for a comprehensive B2B (Business-to-Business) marketplace platform that connects business sellers (manufacturers, wholesalers) with business buyers (distributors, retailers). The platform facilitates product discovery, partner networking, secure transactions, and trust-building through verification and escrow systems. The system will be built using Medusa.js for the backend, Next.js for the frontend, and Tailwind CSS with shadcn/ui for the user interface.
 
 ## Glossary
 
-- **Platform**: The Trade-Pal B2B marketplace web application
-- **Buyer**: A registered user seeking to purchase wholesale products from suppliers
-- **Seller**: A registered user offering wholesale products to buyers (also referred to as Supplier)
-- **Supplier**: Same as Seller - a company providing wholesale products
-- **Pitch**: A negotiation session between a Buyer and Seller for a specific product or set of products
-- **Profile**: A user account page displaying company information, products (for Sellers), or supplier relationships (for Buyers)
-- **Authentication System**: The security mechanism that verifies user identity and credentials
-- **Ranking Score**: A numerical rating assigned to Sellers based on their trade history and performance
-- **Search System**: The functionality allowing users to discover Suppliers, Buyers, and Products using filters and queries
-- **Subscription Plan**: A pricing tier that determines user access levels and transaction limits
+- **Platform**: The B2B marketplace system
+- **Seller**: A business entity that offers products for sale in bulk (e.g., manufacturers, wholesalers)
+- **Buyer**: A business entity that purchases products from sellers (e.g., distributors, retailers)
+- **Administrator**: The platform owner who manages operations and oversees the marketplace
+- **Seller_Dashboard**: A private portal for sellers to manage their business operations
+- **Public_Store_Page**: A public-facing profile page displaying a seller's company information and product catalog
+- **Buyer_Profile**: A public-facing profile page displaying a buyer's company information and business needs
+- **Product_Catalog**: A collection of products offered by a seller
+- **Partner_Directory**: A searchable directory of businesses (buyers and sellers) for partnership opportunities
+- **Verification_System**: A process to validate business identity through documentation
+- **Escrow_System**: A secure payment holding mechanism that releases funds upon delivery confirmation
+- **Order**: A transaction record between a buyer and seller for product purchase
 
 ## Requirements
 
-### Requirement 1: User Registration and Account Types
+### Requirement 1: Seller Registration and Profile Management
 
-**User Story:** As a business owner, I want to register for either a Buyer or Seller account, so that I can participate in the B2B marketplace according to my business needs.
-
-#### Acceptance Criteria
-
-1. THE Platform SHALL provide a registration interface that allows users to create either a Buyer account or a Seller account
-2. WHEN a user completes the registration form with valid information, THE Platform SHALL create a new account with the selected account type
-3. THE Platform SHALL store the account type designation for each registered user
-4. WHEN a user attempts to register with an email address that already exists, THE Platform SHALL reject the registration and display an error message
-5. THE Platform SHALL allow users to register without requiring immediate payment or subscription selection
-
-### Requirement 2: Buyer Profile Management
-
-**User Story:** As a Buyer, I want to create and manage my company profile, so that Sellers can learn about my business and establish trust.
+**User Story:** As a seller, I want to create and manage my business profile, so that I can establish my presence on the platform and attract potential buyers.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL provide an interface for Buyers to create a profile containing company information
-2. WHEN a Buyer updates their profile information, THE Platform SHALL save the changes and display a confirmation message
-3. THE Platform SHALL display the Buyer profile to authenticated Sellers who have active pitch negotiations with that Buyer
-4. THE Platform SHALL require Buyers to provide company name, business type, and contact information in their profile
-5. THE Platform SHALL allow Buyers to optionally add additional company details such as business description, location, and industry sector
+1. WHEN a seller completes the registration form with valid business information, THE Platform SHALL create a new seller account
+2. THE Platform SHALL require sellers to provide company name, location, contact details, and business description during registration
+3. WHEN a seller updates their profile information, THE Platform SHALL save the changes and reflect them on the Public_Store_Page within 5 seconds
+4. THE Platform SHALL allow sellers to upload and manage company certifications and documentation
+5. WHEN a seller submits verification documents, THE Platform SHALL mark the profile as pending verification until administrator approval
 
-### Requirement 3: Seller Profile and Product Catalog
+### Requirement 2: Seller Product Management
 
-**User Story:** As a Seller, I want to create a detailed company profile with my product catalog, so that Buyers can discover my offerings and evaluate my business.
-
-#### Acceptance Criteria
-
-1. THE Platform SHALL provide an interface for Sellers to create a profile containing company information and product listings
-2. WHEN a Seller adds a new product, THE Platform SHALL store the product with details including name, description, specifications, and price
-3. THE Platform SHALL display the Seller profile page with company information, product catalog, and ranking score to all authenticated users
-4. THE Platform SHALL calculate and display a ranking score for each Seller based on their trade history and performance metrics
-5. WHEN a Buyer searches for products or suppliers, THE Platform SHALL include the Seller profiles and products in search results
-
-### Requirement 4: Authentication System
-
-**User Story:** As a platform user, I want a secure authentication system, so that my account and business information are protected from unauthorized access.
+**User Story:** As a seller, I want to add, edit, and delete products in my catalog, so that I can maintain an up-to-date inventory for potential buyers.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL require users to provide valid credentials (email and password) to access their accounts
-2. WHEN a user enters correct credentials, THE Platform SHALL authenticate the user and grant access to their account dashboard
-3. WHEN a user enters incorrect credentials, THE Platform SHALL reject the login attempt and display an error message
-4. THE Platform SHALL encrypt user passwords using industry-standard hashing algorithms before storing them
-5. THE Platform SHALL maintain user session state and automatically log out users after a period of inactivity
+1. WHEN a seller accesses the Seller_Dashboard, THE Platform SHALL display all products in the Product_Catalog with options to create, edit, or delete
+2. THE Platform SHALL require product name, description, price, and at least one image when creating a new product
+3. WHEN a seller creates a new product, THE Platform SHALL add it to the Product_Catalog and make it searchable within 10 seconds
+4. WHEN a seller deletes a product, THE Platform SHALL remove it from the Product_Catalog and all search results immediately
+5. THE Platform SHALL allow sellers to specify product specifications, minimum order quantities, and bulk pricing tiers
 
-### Requirement 5: Data Pseudonymization
+### Requirement 3: Public Seller Store Page
 
-**User Story:** As a platform administrator, I want to pseudonymize sensitive user data, so that we comply with data protection regulations and protect user privacy.
-
-#### Acceptance Criteria
-
-1. THE Platform SHALL pseudonymize personally identifiable information in logs and analytics systems
-2. WHEN storing user data for non-operational purposes, THE Platform SHALL replace direct identifiers with pseudonymous identifiers
-3. THE Platform SHALL maintain a secure mapping between pseudonymous identifiers and actual user identities
-4. THE Platform SHALL restrict access to the pseudonymization mapping to authorized administrators only
-5. WHEN displaying user data in administrative interfaces, THE Platform SHALL use pseudonymized identifiers unless full identification is operationally necessary
-
-### Requirement 6: Pitch Management System
-
-**User Story:** As a Buyer, I want to create and manage pitch negotiations with Sellers, so that I can negotiate prices and terms for products I'm interested in purchasing.
+**User Story:** As a seller, I want a public-facing store page, so that buyers can discover my company and browse my products.
 
 #### Acceptance Criteria
 
-1. WHEN a Buyer selects a product from a Seller profile, THE Platform SHALL allow the Buyer to create a new pitch for that product
-2. THE Platform SHALL provide an interface for Buyers and Sellers to exchange messages and price proposals within a pitch
-3. WHEN either party submits a new proposal in a pitch, THE Platform SHALL notify the other party and update the pitch status
-4. WHEN both parties agree on terms, THE Platform SHALL allow the pitch to be marked as closed with agreed terms
-5. THE Platform SHALL store the complete negotiation history for each pitch including all proposals and messages
+1. THE Platform SHALL generate a unique Public_Store_Page URL for each verified seller
+2. THE Public_Store_Page SHALL display company information, contact details, certifications, and the complete Product_Catalog
+3. WHEN a buyer visits a Public_Store_Page, THE Platform SHALL display all active products with search and filter capabilities
+4. THE Platform SHALL display a verification badge on the Public_Store_Page for verified sellers
+5. WHEN a product is updated in the Seller_Dashboard, THE Platform SHALL reflect the changes on the Public_Store_Page within 5 seconds
 
-### Requirement 7: Supplier Relationship Tracking
+### Requirement 4: Buyer Registration and Profile Management
 
-**User Story:** As a Buyer, I want to track my relationships with Sellers after closing a pitch, so that I can manage my supplier network and view our trading history.
-
-#### Acceptance Criteria
-
-1. WHEN a pitch is closed with agreed terms, THE Platform SHALL create a supplier relationship record in the Buyer profile
-2. THE Platform SHALL display all active supplier relationships in the Buyer dashboard
-3. WHEN a Buyer views a supplier relationship, THE Platform SHALL display relevant information including contact details, agreed terms, and transaction history
-4. THE Platform SHALL allow Buyers to access their supplier list and view details for each supplier relationship
-5. THE Platform SHALL maintain the supplier relationship record even after transactions are completed for historical reference
-
-### Requirement 8: Search and Discovery
-
-**User Story:** As a platform user, I want to search for suppliers, buyers, and products using filters and keywords, so that I can quickly find relevant business partners and products.
+**User Story:** As a buyer, I want to create and manage my business profile, so that sellers can evaluate my credibility before engaging in transactions.
 
 #### Acceptance Criteria
 
-1. THE Platform SHALL provide a search interface that accepts text queries for suppliers, buyers, and products
-2. WHEN a user enters a search query, THE Platform SHALL return relevant results ranked by relevance and ranking score
-3. THE Platform SHALL provide filter options including product category, location, price range, and ranking score
-4. WHEN a user applies filters to a search, THE Platform SHALL update the results to show only items matching the filter criteria
-5. THE Platform SHALL display search results with key information including company name, product name, price, and ranking score
+1. WHEN a buyer completes the registration form with valid business information, THE Platform SHALL create a new buyer account
+2. THE Platform SHALL require buyers to provide company name, location, contact details, and business interests during registration
+3. THE Platform SHALL allow buyers to specify their business needs and product interests on the Buyer_Profile
+4. WHEN a buyer updates their profile information, THE Platform SHALL save the changes and reflect them on the Buyer_Profile within 5 seconds
+5. WHEN a buyer submits verification documents, THE Platform SHALL mark the profile as pending verification until administrator approval
 
-### Requirement 9: Subscription Plan Selection
+### Requirement 5: Global Product Search
 
-**User Story:** As a registered user, I want to select a subscription plan before trading, so that I can access the platform features appropriate to my business volume.
-
-#### Acceptance Criteria
-
-1. THE Platform SHALL display available subscription plans with pricing and feature details to registered users
-2. WHEN a user attempts to create a pitch without an active subscription, THE Platform SHALL prompt the user to select a subscription plan
-3. THE Platform SHALL provide subscription tiers including a basic plan at 150 dollars per month and a standard plan at 300 dollars per month
-4. WHEN a user selects a subscription plan, THE Platform SHALL activate the subscription and grant access to trading features
-5. THE Platform SHALL track the number of successful trade deals for each user to determine subscription tier eligibility
-
-### Requirement 10: Transaction Fee Processing
-
-**User Story:** As a platform operator, I want to collect a transaction fee on completed deals, so that the platform generates revenue from successful trades.
+**User Story:** As a buyer, I want to search for products across all sellers, so that I can find the best suppliers for my business needs.
 
 #### Acceptance Criteria
 
-1. WHEN a trade deal is marked as completed, THE Platform SHALL calculate a transaction fee of 3.5 percent of the transaction value
-2. THE Platform SHALL record the transaction fee amount in the transaction record
-3. THE Platform SHALL display the transaction fee to both parties before they confirm the completion of a deal
-4. THE Platform SHALL maintain a record of all transaction fees collected for financial reporting
-5. THE Platform SHALL include transaction fee information in user invoices and transaction history
+1. THE Platform SHALL provide a global search interface that queries products from all verified sellers
+2. WHEN a buyer enters a search query, THE Platform SHALL return relevant products within 2 seconds
+3. THE Platform SHALL provide filters for category, price range, seller location, minimum order quantity, and product specifications
+4. WHEN a buyer applies filters, THE Platform SHALL update search results to match the selected criteria within 1 second
+5. THE Platform SHALL display product information including seller name, price, location, and a link to the Public_Store_Page in search results
+
+### Requirement 6: B2B Partner Directory
+
+**User Story:** As a business user (buyer or seller), I want to search for potential partners, so that I can establish new business relationships and expand my network.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL provide a Partner_Directory interface separate from product search
+2. THE Platform SHALL allow users to search for businesses by country, industry, business type, and partnership interests
+3. WHEN a user searches the Partner_Directory, THE Platform SHALL return matching business profiles within 2 seconds
+4. THE Platform SHALL allow users to specify what they are "Looking for" (Suppliers, Buyers, Distributors) and what they "Offer" (Manufacturing, Wholesale, Distribution)
+5. THE Platform SHALL display only verified business profiles in the Partner_Directory search results
+
+### Requirement 7: Profile Verification System
+
+**User Story:** As an administrator, I want to verify business profiles, so that the platform maintains trust and credibility among users.
+
+#### Acceptance Criteria
+
+1. WHEN a user submits verification documents, THE Platform SHALL notify the administrator and add the request to a verification queue
+2. THE Platform SHALL allow administrators to review submitted documents including business registration, tax identification, and company certificates
+3. WHEN an administrator approves a verification request, THE Platform SHALL mark the profile as verified and display a verification badge
+4. WHEN an administrator rejects a verification request, THE Platform SHALL notify the user with rejection reasons
+5. THE Platform SHALL restrict unverified users from appearing in the Partner_Directory and limit their transaction capabilities
+
+### Requirement 8: Order Creation and Management
+
+**User Story:** As a buyer, I want to place orders with sellers, so that I can purchase products for my business.
+
+#### Acceptance Criteria
+
+1. WHEN a buyer selects products and submits an order, THE Platform SHALL create an Order record with buyer information, seller information, product details, and total amount
+2. THE Platform SHALL notify the seller when a new Order is created
+3. WHEN a seller views an Order in the Seller_Dashboard, THE Platform SHALL display buyer information, ordered products, quantities, and delivery details
+4. THE Platform SHALL allow sellers to accept or decline orders within the Seller_Dashboard
+5. WHEN a seller accepts an Order, THE Platform SHALL notify the buyer and initiate the Escrow_System process
+
+### Requirement 9: Secure Escrow System
+
+**User Story:** As a buyer, I want my payment to be held securely until delivery is confirmed, so that I am protected from fraudulent transactions.
+
+#### Acceptance Criteria
+
+1. WHEN a buyer confirms an accepted Order, THE Platform SHALL hold the payment amount in the Escrow_System
+2. THE Platform SHALL prevent the seller from accessing escrowed funds until delivery confirmation or mutual agreement
+3. WHEN a buyer confirms successful delivery, THE Platform SHALL release the escrowed funds to the seller within 24 hours
+4. IF a dispute arises, THEN THE Platform SHALL hold the escrowed funds and notify the administrator for resolution
+5. THE Platform SHALL provide transaction status visibility to both buyer and seller throughout the escrow process
+
+### Requirement 10: Shipment Tracking Integration
+
+**User Story:** As a buyer, I want to track my order shipment, so that I can monitor delivery progress and plan accordingly.
+
+#### Acceptance Criteria
+
+1. WHEN a seller provides shipment tracking information, THE Platform SHALL store the tracking number and carrier details with the Order
+2. THE Platform SHALL integrate with shipping carrier APIs to retrieve real-time tracking status
+3. WHEN a user views an Order with tracking information, THE Platform SHALL display the current shipment status and location
+4. THE Platform SHALL update tracking information automatically at intervals not exceeding 4 hours
+5. WHEN a shipment status changes to delivered, THE Platform SHALL notify both buyer and seller
+
+### Requirement 11: Administrator Platform Management
+
+**User Story:** As an administrator, I want to manage platform operations, so that I can ensure smooth functioning and resolve issues.
+
+#### Acceptance Criteria
+
+1. THE Platform SHALL provide an administrator dashboard with access to all user profiles, orders, and verification requests
+2. THE Platform SHALL allow administrators to view and manage all Escrow_System transactions
+3. WHEN a dispute is flagged, THE Platform SHALL notify the administrator and provide access to order details and communication history
+4. THE Platform SHALL allow administrators to configure platform-wide settings including commission rates, verification requirements, and payment methods
+5. THE Platform SHALL provide administrators with analytics and reporting capabilities for user activity, transactions, and revenue
+
+### Requirement 12: Seller Dashboard Order Management
+
+**User Story:** As a seller, I want to view and manage incoming orders, so that I can fulfill customer requests efficiently.
+
+#### Acceptance Criteria
+
+1. WHEN a seller accesses the Seller_Dashboard, THE Platform SHALL display all orders with status indicators (pending, accepted, shipped, completed)
+2. THE Platform SHALL allow sellers to filter orders by status, date range, and buyer
+3. WHEN a seller updates an order status, THE Platform SHALL save the change and notify the buyer within 30 seconds
+4. THE Platform SHALL allow sellers to add shipment tracking information to accepted orders
+5. THE Platform SHALL display order details including buyer contact information, delivery address, and special instructions

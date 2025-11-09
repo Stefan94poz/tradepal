@@ -6,930 +6,631 @@ mode: agent
 
 ## Overview
 
-Trade-Pal is a web-based B2B marketplace platform built as a modern single-page application (SPA) with a RESTful API backend. The architecture follows a three-tier pattern: presentation layer (React frontend), application layer (Node.js/Express API), and data layer (PostgreSQL database with Redis caching). The system prioritizes scalability, security, and user experience through clean separation of concerns and industry-standard patterns.
+The B2B marketplace platform will be built as a full-stack application using Medusa.js as the backend commerce engine and Next.js as the frontend framework. The architecture follows a headless commerce approach where Medusa.js provides the API layer for commerce operations, user management, and data persistence, while Next.js handles the presentation layer with server-side rendering for optimal SEO and performance.
+
+The platform supports three distinct user roles (Sellers, Buyers, Administrators) with role-based access control. The system emphasizes trust and security through profile verification, escrow payments, and shipment tracking integrations.
 
 ## Architecture
 
 ### High-Level Architecture
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        Web[Next.js App - SSR/CSR]
-    end
-
-    subgraph "Application Layer - MedusaJS"
-        API[MedusaJS API Server]
-        Auth[Auth Module]
-        User[User Module]
-        Product[Product Module - Extended]
-        Pitch[Custom Pitch Module]
-        Search[Search Module]
-        Sub[Custom Subscription Module]
-        Workflows[MedusaJS Workflows]
-    end
-
-    subgraph "Data Layer"
-        DB[(PostgreSQL Database)]
-        Cache[(Redis Cache)]
-        Storage[File Storage - S3]
-    end
-
-    Web -->|HTTPS/REST| API
-    API --> Auth
-    API --> User
-    API --> Product
-    API --> Pitch
-    API --> Search
-    API --> Sub
-    API --> Workflows
-
-    Auth --> DB
-    User --> DB
-    Product --> DB
-    Pitch --> DB
-    Search --> DB
-    Sub --> DB
-    Workflows --> DB
-
-    Search --> Cache
-    Product --> Cache
-    User --> Storage
-    Product --> Storage
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Next.js Frontend                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ Seller Pages │  │ Buyer Pages  │  │ Admin Pages  │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │         Shared Components (shadcn/ui)                │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                    API Calls (REST)
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                      Medusa.js Backend                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Custom Services Layer                    │  │
+│  │  • VerificationService  • EscrowService              │  │
+│  │  • PartnerSearchService • ShipmentTrackingService    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Core Medusa Services                     │  │
+│  │  • ProductService  • OrderService  • CustomerService │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                  Database Layer                       │  │
+│  │              PostgreSQL with TypeORM                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                    External Integrations
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+   ┌────────┐         ┌──────────┐       ┌──────────┐
+   │Payment │         │Shipping  │       │File      │
+   │Gateway │         │Carriers  │       │Storage   │
+   └────────┘         └──────────┘       └──────────┘
 ```
 
-### Technology Stack
+### Technology Stack Details
 
-**Frontend:**
-
-- Next.js 14+ with TypeScript and App Router
-- Tailwind CSS for styling
-- shadcn/ui for UI components
-- React Hook Form for form management
-- Zod for validation
-- TanStack Query (React Query) for server state management
-- Axios for API communication
-
-**Backend:**
-
-- MedusaJS 2.0 (Node.js-based e-commerce framework)
-- TypeScript for type safety
-- Built-in authentication with JWT
-- PostgreSQL for relational data (MedusaJS default)
-- Redis for caching and job queues (MedusaJS default)
-- MedusaJS Workflows for complex business logic
-- MedusaJS Admin API for management operations
-
-**Database:**
-
-- PostgreSQL 14+ for relational data (MedusaJS managed)
-- Redis for session management, caching, and job queues
-- AWS S3 or similar for file storage (product images, company logos)
-
-**Infrastructure:**
-
-- Docker for containerization
-- Nginx as reverse proxy
-- PM2 for process management
+- **Backend**: Medusa.js v2.x with Node.js
+- **Frontend**: Next.js 14+ with App Router
+- **Database**: PostgreSQL 14+
+- **ORM**: TypeORM (Medusa default)
+- **UI Framework**: Tailwind CSS + shadcn/ui
+- **Authentication**: Medusa Auth with JWT
+- **File Storage**: S3-compatible storage (AWS S3 or MinIO)
+- **Payment Processing**: Stripe or similar payment gateway
+- **Caching**: Redis for session management and caching
 
 ## Components and Interfaces
 
-### 1. Authentication Module (MedusaJS Extended)
+### Backend Components (Medusa.js)
 
-**Responsibilities:**
+#### 1. Custom Data Models
 
-- User registration and login (extends MedusaJS Customer)
-- JWT token generation and validation (MedusaJS built-in)
-- Password hashing and verification (MedusaJS built-in)
-- Session management
-
-**Key Interfaces:**
+**Seller Profile Extension**
 
 ```typescript
-// Extends MedusaJS Customer entity
-import { Customer } from "@medusajs/medusa";
-
-interface ExtendedCustomer extends Customer {
-  account_type: "BUYER" | "SELLER";
-  company_name: string;
-  metadata: {
-    phone?: string;
-    website?: string;
-  };
-}
-
-interface RegisterDTO {
-  email: string;
-  password: string;
-  account_type: "BUYER" | "SELLER";
-  company_name: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-}
-
-interface LoginDTO {
-  email: string;
-  password: string;
-}
-
-interface AuthResponse {
-  customer: ExtendedCustomer;
-  // MedusaJS handles JWT tokens via cookies
+// Extends Medusa Customer entity
+{
+  id: string
+  user_id: string // Reference to Medusa User
+  company_name: string
+  business_type: string
+  description: string
+  location: {
+    country: string
+    city: string
+    address: string
+  }
+  certifications: string[] // URLs to certification documents
+  verification_status: 'pending' | 'verified' | 'rejected'
+  verification_documents: string[] // URLs to verification docs
+  is_seller: boolean
+  created_at: Date
+  updated_at: Date
 }
 ```
 
-### 2. User Profile Module (Custom MedusaJS Module)
-
-**Responsibilities:**
-
-- User profile management (Buyer and Seller)
-- Company information CRUD operations
-- Pseudonymization of sensitive data
-- User data retrieval and updates
-
-**Key Interfaces:**
+**Buyer Profile Extension**
 
 ```typescript
-// Custom entity extending MedusaJS patterns
-import { BaseEntity } from "@medusajs/medusa";
-
-class UserProfile extends BaseEntity {
-  customer_id: string;
-  customer: ExtendedCustomer;
-
-  business_type: string;
-  description?: string;
-  country: string;
-  city?: string;
-  address?: string;
-  industry_sector?: string;
-  logo_url?: string;
-  ranking_score: number; // For sellers only
-
-  metadata: Record<string, any>;
-}
-
-interface ProfileDTO {
-  business_type: string;
-  description?: string;
-  location: Location;
-  industry_sector?: string;
-}
-
-interface Location {
-  country: string;
-  city?: string;
-  address?: string;
-}
-
-// MedusaJS Service pattern
-class UserProfileService extends TransactionBaseService {
-  async createProfile(
-    customerId: string,
-    profileData: ProfileDTO
-  ): Promise<UserProfile>;
-  async updateProfile(
-    profileId: string,
-    updates: Partial<ProfileDTO>
-  ): Promise<UserProfile>;
-  async getProfile(customerId: string): Promise<UserProfile>;
-  async getPublicProfile(customerId: string): Promise<Partial<UserProfile>>;
-  async pseudonymizeUserData(customerId: string): Promise<PseudonymizedData>;
+// Extends Medusa Customer entity
+{
+  id: string
+  user_id: string // Reference to Medusa User
+  company_name: string
+  business_interests: string[]
+  business_needs: string
+  location: {
+    country: string
+    city: string
+    address: string
+  }
+  verification_status: 'pending' | 'verified' | 'rejected'
+  verification_documents: string[] // URLs to verification docs
+  is_buyer: boolean
+  created_at: Date
+  updated_at: Date
 }
 ```
 
-### 3. Product Module (Extended MedusaJS Product)
-
-**Responsibilities:**
-
-- Product catalog management for Sellers (extends MedusaJS Product)
-- Product CRUD operations
-- Product image handling (MedusaJS built-in)
-- Product search indexing
-
-**Key Interfaces:**
+**Partner Directory Profile**
 
 ```typescript
-// Extends MedusaJS Product entity
-import { Product as MedusaProduct } from "@medusajs/medusa";
-
-interface ExtendedProduct extends MedusaProduct {
-  seller_id: string;
-  seller: ExtendedCustomer;
-  specifications: Record<string, any>;
-  minimum_order_quantity?: number;
-  // MedusaJS already has: title, description, images, variants (for pricing)
-}
-
-interface ProductDTO {
-  title: string;
-  description: string;
-  specifications: Record<string, any>;
-  category_id?: string;
-  minimum_order_quantity?: number;
-  // Variants for pricing (MedusaJS pattern)
-  variants: Array<{
-    title: string;
-    prices: Array<{
-      amount: number;
-      currency_code: string;
-    }>;
-    inventory_quantity: number;
-  }>;
-}
-
-// MedusaJS Service pattern
-class ExtendedProductService extends ProductService {
-  async createProduct(
-    sellerId: string,
-    productData: ProductDTO
-  ): Promise<ExtendedProduct>;
-  async updateProduct(
-    productId: string,
-    updates: Partial<ProductDTO>
-  ): Promise<ExtendedProduct>;
-  async deleteProduct(productId: string): Promise<void>;
-  async getProduct(productId: string): Promise<ExtendedProduct>;
-  async getSellerProducts(
-    sellerId: string,
-    pagination: PaginationParams
-  ): Promise<PaginatedProducts>;
+{
+  id: string
+  user_id: string
+  profile_type: 'seller' | 'buyer'
+  company_name: string
+  country: string
+  industry: string[]
+  looking_for: ('suppliers' | 'buyers' | 'distributors')[]
+  offers: ('manufacturing' | 'wholesale' | 'distribution')[]
+  is_verified: boolean
+  created_at: Date
+  updated_at: Date
 }
 ```
 
-### 4. Pitch Module (Custom MedusaJS Module)
-
-**Responsibilities:**
-
-- Pitch creation and management
-- Negotiation message handling
-- Proposal tracking
-- Pitch status management
-- Supplier relationship creation upon pitch closure
-
-**Key Interfaces:**
+**Escrow Transaction**
 
 ```typescript
-// Custom MedusaJS entities
-import { BaseEntity } from "@medusajs/medusa";
-
-class Pitch extends BaseEntity {
+{
+  id: string;
+  order_id: string; // Reference to Medusa Order
   buyer_id: string;
-  buyer: ExtendedCustomer;
-
   seller_id: string;
-  seller: ExtendedCustomer;
-
-  product_id: string;
-  product: ExtendedProduct;
-
-  status: PitchStatus;
-  requested_quantity: number;
-  target_price_amount?: number;
-  target_price_currency?: string;
-
-  closed_at?: Date;
-
-  messages: PitchMessage[];
-  proposals: Proposal[];
-}
-
-type PitchStatus = "OPEN" | "IN_NEGOTIATION" | "CLOSED" | "CANCELLED";
-
-// MedusaJS Service pattern
-class PitchService extends TransactionBaseService {
-  async createPitch(buyerId: string, pitchData: CreatePitchDTO): Promise<Pitch>;
-  async getPitch(pitchId: string): Promise<PitchDetails>;
-  async getBuyerPitches(buyerId: string): Promise<Pitch[]>;
-  async getSellerPitches(sellerId: string): Promise<Pitch[]>;
-  async addMessage(pitchId: string, message: MessageDTO): Promise<PitchMessage>;
-  async submitProposal(
-    pitchId: string,
-    proposal: ProposalDTO
-  ): Promise<Proposal>;
-  async closePitch(
-    pitchId: string,
-    agreedTerms: AgreedTerms
-  ): Promise<SupplierRelationship>;
-  async updatePitchStatus(pitchId: string, status: PitchStatus): Promise<Pitch>;
-}
-
-interface CreatePitchDTO {
-  sellerId: string;
-  productId: string;
-  initialMessage: string;
-  requestedQuantity: number;
-  targetPrice?: Price;
-}
-
-interface Pitch {
-  id: string;
-  buyerId: string;
-  sellerId: string;
-  productId: string;
-  status: PitchStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  closedAt?: Date;
-}
-
-type PitchStatus = "OPEN" | "IN_NEGOTIATION" | "CLOSED" | "CANCELLED";
-
-interface PitchDetails extends Pitch {
-  messages: Message[];
-  proposals: Proposal[];
-  product: Product;
-  buyer: PublicProfile;
-  seller: PublicProfile;
-}
-
-interface MessageDTO {
-  senderId: string;
-  content: string;
-}
-
-interface Message extends MessageDTO {
-  id: string;
-  pitchId: string;
-  createdAt: Date;
-}
-
-interface ProposalDTO {
-  proposedBy: string;
-  price: Price;
-  quantity: number;
-  terms?: string;
-}
-
-interface Proposal extends ProposalDTO {
-  id: string;
-  pitchId: string;
-  createdAt: Date;
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "SUPERSEDED";
-}
-
-interface AgreedTerms {
-  finalPrice: Price;
-  quantity: number;
-  deliveryTerms: string;
-  paymentTerms: string;
-}
-
-interface SupplierRelationship {
-  id: string;
-  buyerId: string;
-  sellerId: string;
-  pitchId: string;
-  agreedTerms: AgreedTerms;
-  createdAt: Date;
-  transactionHistory: Transaction[];
-}
-```
-
-### 5. Search Module (MedusaJS Search Plugin)
-
-**Responsibilities:**
-
-- Full-text search across suppliers, buyers, and products
-- Filter application and result ranking
-- Search result caching
-- Ranking score integration
-
-**Key Interfaces:**
-
-```typescript
-// Uses MedusaJS Search Service pattern
-class ExtendedSearchService extends SearchService {
-  async searchProducts(
-    query: SearchQuery
-  ): Promise<SearchResults<ExtendedProduct>>;
-  async searchSuppliers(
-    query: SearchQuery
-  ): Promise<SearchResults<UserProfile>>;
-  async searchBuyers(query: SearchQuery): Promise<SearchResults<UserProfile>>;
-  async applyFilters(results: any[], filters: SearchFilters): Promise<any[]>;
-}
-
-interface SearchQuery {
-  text: string;
-  filters?: SearchFilters;
-  pagination: PaginationParams;
-  sortBy?: SortOption;
-}
-
-interface SearchFilters {
-  category?: string[];
-  location?: string[];
-  priceRange?: PriceRange;
-  minRankingScore?: number;
-}
-
-interface PriceRange {
-  min: number;
-  max: number;
-  currency: string;
-}
-
-type SortOption =
-  | "RELEVANCE"
-  | "PRICE_ASC"
-  | "PRICE_DESC"
-  | "RANKING_DESC"
-  | "NEWEST";
-
-interface SearchResults<T> {
-  results: T[];
-  total: number;
-  page: number;
-  totalPages: number;
-  facets?: SearchFacets;
-}
-
-interface SearchFacets {
-  categories: FacetCount[];
-  locations: FacetCount[];
-  priceRanges: FacetCount[];
-}
-
-interface FacetCount {
-  value: string;
-  count: number;
-}
-```
-
-### 6. Subscription Module (Custom MedusaJS Module)
-
-**Responsibilities:**
-
-- Subscription plan management
-- User subscription tracking
-- Trade deal counting
-- Subscription tier eligibility
-- Transaction fee calculation
-
-**Key Interfaces:**
-
-```typescript
-// Custom MedusaJS entities
-class SubscriptionPlan extends BaseEntity {
-  name: string;
-  price: number;
-  currency: string;
-  billing_period: "MONTHLY" | "YEARLY";
-  features: string[];
-  trade_limit?: number;
-}
-
-class Subscription extends BaseEntity {
-  customer_id: string;
-  customer: ExtendedCustomer;
-
-  plan_id: string;
-  plan: SubscriptionPlan;
-
-  status: "ACTIVE" | "EXPIRED" | "CANCELLED";
-  start_date: Date;
-  end_date: Date;
-  trade_count: number;
-}
-
-// MedusaJS Service pattern
-class SubscriptionService extends TransactionBaseService {
-  async getAvailablePlans(): Promise<SubscriptionPlan[]>;
-  async subscribeToPlan(
-    customerId: string,
-    planId: string
-  ): Promise<Subscription>;
-  async getActiveSubscription(customerId: string): Promise<Subscription | null>;
-  async checkSubscriptionAccess(customerId: string): Promise<boolean>;
-  async incrementTradeCount(customerId: string): Promise<number>;
-  async calculateTransactionFee(transactionAmount: number): Promise<number>;
-  async recordTransaction(transaction: TransactionDTO): Promise<Transaction>;
-}
-
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: number;
-  currency: string;
-  billingPeriod: "MONTHLY" | "YEARLY";
-  features: string[];
-  tradeLimit?: number;
-}
-
-interface Subscription {
-  id: string;
-  userId: string;
-  planId: string;
-  status: "ACTIVE" | "EXPIRED" | "CANCELLED";
-  startDate: Date;
-  endDate: Date;
-  tradeCount: number;
-}
-
-interface TransactionDTO {
-  buyerId: string;
-  sellerId: string;
-  pitchId: string;
   amount: number;
   currency: string;
-}
-
-interface Transaction extends TransactionDTO {
-  id: string;
-  transactionFee: number;
-  status: "PENDING" | "COMPLETED" | "FAILED";
-  createdAt: Date;
-  completedAt?: Date;
+  status: "held" | "released" | "disputed" | "refunded";
+  payment_intent_id: string; // Payment gateway reference
+  held_at: Date;
+  released_at: Date | null;
+  dispute_reason: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 ```
+
+**Shipment Tracking**
+
+```typescript
+{
+  id: string;
+  order_id: string;
+  carrier: string;
+  tracking_number: string;
+  status: "pending" | "in_transit" | "delivered" | "failed";
+  current_location: string | null;
+  estimated_delivery: Date | null;
+  last_updated: Date;
+  tracking_events: {
+    timestamp: Date;
+    status: string;
+    location: string;
+    description: string;
+  }
+  [];
+  created_at: Date;
+  updated_at: Date;
+}
+```
+
+#### 2. Custom Services
+
+**VerificationService**
+
+- `submitVerification(userId, documents)`: Submit verification documents
+- `approveVerification(userId, adminId)`: Approve a verification request
+- `rejectVerification(userId, adminId, reason)`: Reject with reason
+- `getVerificationStatus(userId)`: Get current verification status
+- `listPendingVerifications()`: List all pending verifications for admin
+
+**EscrowService**
+
+- `createEscrow(orderId, amount)`: Create escrow transaction when order is accepted
+- `releaseEscrow(orderId, buyerId)`: Release funds to seller on delivery confirmation
+- `disputeEscrow(orderId, reason)`: Flag escrow for dispute resolution
+- `refundEscrow(orderId, adminId)`: Refund to buyer (admin action)
+- `getEscrowStatus(orderId)`: Get escrow transaction status
+
+**PartnerSearchService**
+
+- `searchPartners(filters)`: Search partner directory with filters
+- `createPartnerProfile(userId, profileData)`: Create partner directory entry
+- `updatePartnerProfile(userId, profileData)`: Update partner profile
+- `getPartnerProfile(userId)`: Retrieve partner profile details
+
+**ShipmentTrackingService**
+
+- `addTracking(orderId, carrier, trackingNumber)`: Add tracking to order
+- `updateTrackingStatus(orderId)`: Fetch and update tracking from carrier API
+- `getTrackingDetails(orderId)`: Get current tracking information
+- `subscribeToTrackingUpdates(orderId)`: Set up automatic tracking updates
+
+#### 3. Custom API Endpoints
+
+**Verification Endpoints**
+
+- `POST /admin/verifications/:id/approve`: Approve verification
+- `POST /admin/verifications/:id/reject`: Reject verification
+- `GET /admin/verifications`: List pending verifications
+- `POST /store/verification/submit`: Submit verification documents
+- `GET /store/verification/status`: Get own verification status
+
+**Escrow Endpoints**
+
+- `POST /store/orders/:id/escrow/release`: Buyer confirms delivery
+- `POST /store/orders/:id/escrow/dispute`: Flag dispute
+- `GET /store/orders/:id/escrow`: Get escrow status
+- `POST /admin/escrow/:id/refund`: Admin refund action
+
+**Partner Directory Endpoints**
+
+- `GET /store/partners/search`: Search partner directory
+- `POST /store/partners/profile`: Create/update partner profile
+- `GET /store/partners/:id`: Get partner profile details
+
+**Shipment Tracking Endpoints**
+
+- `POST /store/orders/:id/tracking`: Add tracking information
+- `GET /store/orders/:id/tracking`: Get tracking details
+- `PUT /store/orders/:id/tracking/refresh`: Manually refresh tracking
+
+### Frontend Components (Next.js)
+
+#### Page Structure
+
+```
+app/
+├── (auth)/
+│   ├── login/
+│   ├── register/
+│   └── register/[role]/ (seller or buyer specific)
+├── (seller)/
+│   ├── dashboard/
+│   │   ├── products/
+│   │   ├── orders/
+│   │   └── profile/
+│   └── store/[sellerId]/
+├── (buyer)/
+│   ├── search/
+│   ├── partners/
+│   ├── orders/
+│   └── profile/
+├── (admin)/
+│   ├── dashboard/
+│   ├── verifications/
+│   ├── escrow/
+│   └── settings/
+└── (public)/
+    ├── sellers/[sellerId]/
+    └── buyers/[buyerId]/
+```
+
+#### Key UI Components (shadcn/ui based)
+
+**ProductCard**
+
+- Display product image, name, price, seller info
+- Quick view and add to inquiry actions
+- Used in search results and seller store pages
+
+**SellerStoreHeader**
+
+- Company information display
+- Verification badge
+- Contact buttons
+- Used on public seller store pages
+
+**OrderTable**
+
+- Tabular display of orders with status
+- Filtering and sorting capabilities
+- Action buttons (accept, decline, add tracking)
+- Used in seller dashboard and buyer order history
+
+**PartnerSearchFilters**
+
+- Multi-select filters for country, industry, looking for, offers
+- Search input for company name
+- Used in partner directory page
+
+**VerificationBadge**
+
+- Visual indicator of verification status
+- Tooltip with verification details
+- Used throughout the platform
+
+**EscrowStatusCard**
+
+- Display escrow transaction status
+- Action buttons (release, dispute)
+- Timeline of escrow events
+- Used in order detail pages
+
+**TrackingTimeline**
+
+- Visual timeline of shipment events
+- Current location and status
+- Estimated delivery date
+- Used in order detail pages
 
 ## Data Models
 
-### Database Schema
+### Database Schema Extensions
 
-```sql
--- Users table
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    account_type VARCHAR(20) NOT NULL CHECK (account_type IN ('BUYER', 'SELLER')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
-);
+The platform extends Medusa's core schema with custom tables:
 
--- Profiles table
-CREATE TABLE profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    company_name VARCHAR(255) NOT NULL,
-    business_type VARCHAR(100),
-    description TEXT,
-    country VARCHAR(100),
-    city VARCHAR(100),
-    address TEXT,
-    industry_sector VARCHAR(100),
-    phone VARCHAR(50),
-    contact_email VARCHAR(255),
-    website VARCHAR(255),
-    logo_url VARCHAR(500),
-    ranking_score DECIMAL(3,2) DEFAULT 0.00,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**seller_profiles**
 
--- Products table
-CREATE TABLE products (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    seller_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    specifications JSONB,
-    price_amount DECIMAL(15,2) NOT NULL,
-    price_currency VARCHAR(10) NOT NULL,
-    price_unit VARCHAR(50),
-    category VARCHAR(100),
-    minimum_order_quantity INTEGER,
-    status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+- Primary key: id (uuid)
+- Foreign key: user_id → users.id
+- Indexes: user_id, verification_status, location.country
 
--- Product images table
-CREATE TABLE product_images (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-    image_url VARCHAR(500) NOT NULL,
-    display_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**buyer_profiles**
 
--- Pitches table
-CREATE TABLE pitches (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    seller_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
-    status VARCHAR(20) DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'IN_NEGOTIATION', 'CLOSED', 'CANCELLED')),
-    requested_quantity INTEGER,
-    target_price_amount DECIMAL(15,2),
-    target_price_currency VARCHAR(10),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    closed_at TIMESTAMP
-);
+- Primary key: id (uuid)
+- Foreign key: user_id → users.id
+- Indexes: user_id, verification_status, location.country
 
--- Pitch messages table
-CREATE TABLE pitch_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pitch_id UUID REFERENCES pitches(id) ON DELETE CASCADE,
-    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**partner_directory**
 
--- Proposals table
-CREATE TABLE proposals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pitch_id UUID REFERENCES pitches(id) ON DELETE CASCADE,
-    proposed_by UUID REFERENCES users(id) ON DELETE CASCADE,
-    price_amount DECIMAL(15,2) NOT NULL,
-    price_currency VARCHAR(10) NOT NULL,
-    quantity INTEGER NOT NULL,
-    terms TEXT,
-    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'SUPERSEDED')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+- Primary key: id (uuid)
+- Foreign key: user_id → users.id
+- Indexes: country, industry (GIN), is_verified
+- Full-text search: company_name
 
--- Supplier relationships table
-CREATE TABLE supplier_relationships (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    seller_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    pitch_id UUID REFERENCES pitches(id) ON DELETE SET NULL,
-    agreed_price_amount DECIMAL(15,2),
-    agreed_price_currency VARCHAR(10),
-    agreed_quantity INTEGER,
-    delivery_terms TEXT,
-    payment_terms TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**escrow_transactions**
 
--- Subscription plans table
-CREATE TABLE subscription_plans (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    billing_period VARCHAR(20) NOT NULL,
-    features JSONB,
-    trade_limit INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+- Primary key: id (uuid)
+- Foreign key: order_id → orders.id
+- Indexes: order_id (unique), buyer_id, seller_id, status
 
--- Subscriptions table
-CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    plan_id UUID REFERENCES subscription_plans(id),
-    status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'EXPIRED', 'CANCELLED')),
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP NOT NULL,
-    trade_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**shipment_tracking**
 
--- Transactions table
-CREATE TABLE transactions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    seller_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    pitch_id UUID REFERENCES pitches(id) ON DELETE SET NULL,
-    amount DECIMAL(15,2) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    transaction_fee DECIMAL(15,2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP
-);
+- Primary key: id (uuid)
+- Foreign key: order_id → orders.id
+- Indexes: order_id (unique), tracking_number, status
 
--- Pseudonymization mapping table (restricted access)
-CREATE TABLE pseudonym_mappings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    pseudonym_id VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**verification_documents**
 
--- Indexes for performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_profiles_user_id ON profiles(user_id);
-CREATE INDEX idx_products_seller_id ON products(seller_id);
-CREATE INDEX idx_products_category ON products(category);
-CREATE INDEX idx_pitches_buyer_id ON pitches(buyer_id);
-CREATE INDEX idx_pitches_seller_id ON pitches(seller_id);
-CREATE INDEX idx_pitches_status ON pitches(status);
-CREATE INDEX idx_pitch_messages_pitch_id ON pitch_messages(pitch_id);
-CREATE INDEX idx_proposals_pitch_id ON proposals(pitch_id);
-CREATE INDEX idx_supplier_relationships_buyer_id ON supplier_relationships(buyer_id);
-CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
-CREATE INDEX idx_transactions_buyer_id ON transactions(buyer_id);
-CREATE INDEX idx_transactions_seller_id ON transactions(seller_id);
+- Primary key: id (uuid)
+- Foreign key: user_id → users.id
+- Stores document URLs and verification metadata
+
+### Data Relationships
+
+```
+User (Medusa Core)
+  ├── has one SellerProfile (if seller)
+  ├── has one BuyerProfile (if buyer)
+  ├── has one PartnerDirectoryProfile
+  └── has many VerificationDocuments
+
+Order (Medusa Core)
+  ├── has one EscrowTransaction
+  ├── has one ShipmentTracking
+  ├── belongs to Buyer (Customer)
+  └── belongs to Seller (via Product → Store)
+
+Product (Medusa Core)
+  └── belongs to Seller (via Store)
 ```
 
 ## Error Handling
 
-### Error Response Format
-
-All API errors follow a consistent format:
-
-```typescript
-interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-    details?: any;
-    timestamp: string;
-    path: string;
-  };
-}
-```
-
 ### Error Categories
 
-1. **Authentication Errors (401)**
-   - INVALID_CREDENTIALS
-   - TOKEN_EXPIRED
-   - TOKEN_INVALID
-   - UNAUTHORIZED_ACCESS
+**Authentication Errors**
 
-2. **Authorization Errors (403)**
-   - INSUFFICIENT_PERMISSIONS
-   - SUBSCRIPTION_REQUIRED
-   - ACCOUNT_TYPE_MISMATCH
+- 401 Unauthorized: Invalid or expired token
+- 403 Forbidden: Insufficient permissions for role-based actions
+- Handle with redirect to login and clear error messages
 
-3. **Validation Errors (400)**
-   - INVALID_INPUT
-   - MISSING_REQUIRED_FIELD
-   - INVALID_FORMAT
+**Validation Errors**
 
-4. **Resource Errors (404)**
-   - USER_NOT_FOUND
-   - PRODUCT_NOT_FOUND
-   - PITCH_NOT_FOUND
+- 400 Bad Request: Invalid input data
+- Return detailed field-level validation errors
+- Display inline validation messages in forms
 
-5. **Business Logic Errors (422)**
-   - PITCH_ALREADY_CLOSED
-   - INSUFFICIENT_TRADE_LIMIT
-   - DUPLICATE_PROPOSAL
+**Business Logic Errors**
 
-6. **Server Errors (500)**
-   - INTERNAL_SERVER_ERROR
-   - DATABASE_ERROR
-   - EXTERNAL_SERVICE_ERROR
+- 409 Conflict: Verification already submitted, escrow already released
+- 422 Unprocessable Entity: Cannot perform action in current state
+- Display user-friendly error messages with suggested actions
+
+**External Service Errors**
+
+- 502 Bad Gateway: Payment gateway or shipping API failures
+- Implement retry logic with exponential backoff
+- Provide fallback UI and manual intervention options
+
+**Database Errors**
+
+- 500 Internal Server Error: Database connection or query failures
+- Log errors for monitoring
+- Display generic error message to users
 
 ### Error Handling Strategy
 
+**Backend (Medusa.js)**
+
 ```typescript
-// Centralized error handler middleware
-class ErrorHandler {
-  static handle(error: Error, req: Request, res: Response, next: NextFunction) {
-    if (error instanceof ValidationError) {
-      return res.status(400).json({
-        error: {
-          code: "INVALID_INPUT",
-          message: error.message,
-          details: error.details,
-          timestamp: new Date().toISOString(),
-          path: req.path,
-        },
-      });
-    }
+// Custom error classes
+class VerificationError extends Error {
+  code: string;
+  statusCode: number;
+}
 
-    if (error instanceof AuthenticationError) {
-      return res.status(401).json({
-        error: {
-          code: error.code,
-          message: error.message,
-          timestamp: new Date().toISOString(),
-          path: req.path,
-        },
-      });
-    }
+// Global error handler middleware
+app.use((error, req, res, next) => {
+  logger.error(error);
 
-    // Log unexpected errors
-    logger.error("Unexpected error:", error);
-
-    return res.status(500).json({
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: "An unexpected error occurred",
-        timestamp: new Date().toISOString(),
-        path: req.path,
-      },
+  if (error instanceof VerificationError) {
+    return res.status(error.statusCode).json({
+      code: error.code,
+      message: error.message,
     });
+  }
+
+  // Default error response
+  res.status(500).json({
+    code: "INTERNAL_ERROR",
+    message: "An unexpected error occurred",
+  });
+});
+```
+
+**Frontend (Next.js)**
+
+```typescript
+// API client with error handling
+async function apiCall(endpoint, options) {
+  try {
+    const response = await fetch(endpoint, options);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(error.code, error.message, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      // Handle known API errors
+      toast.error(error.message);
+    } else {
+      // Handle network errors
+      toast.error("Network error. Please try again.");
+    }
+    throw error;
   }
 }
 ```
 
 ## Testing Strategy
 
-### Unit Testing
+### Backend Testing
 
-**Scope:** Individual functions, methods, and components in isolation
+**Unit Tests**
 
-**Tools:** Jest, React Testing Library
+- Test custom services in isolation with mocked dependencies
+- Focus on business logic: verification approval, escrow release conditions
+- Target: 80% code coverage for custom services
+- Tools: Jest, ts-mockito
 
-**Coverage Targets:**
+**Integration Tests**
 
-- Service layer: 90%+ coverage
-- Utility functions: 95%+ coverage
-- React components: 80%+ coverage
+- Test API endpoints with test database
+- Verify database transactions and data integrity
+- Test authentication and authorization flows
+- Tools: Jest, Supertest, test PostgreSQL instance
 
-**Key Areas:**
+**Example Test Cases**
 
-- Authentication logic (password hashing, token generation)
-- Business logic (ranking score calculation, transaction fee calculation)
-- Data validation and transformation
-- React component rendering and user interactions
+- VerificationService: Approve verification updates status and sends notification
+- EscrowService: Cannot release escrow without buyer confirmation
+- PartnerSearchService: Search filters return correct results
+- ShipmentTrackingService: Tracking updates trigger buyer notifications
 
-### Integration Testing
+### Frontend Testing
 
-**Scope:** API endpoints and service interactions
+**Component Tests**
 
-**Tools:** Jest, Supertest
+- Test UI components with various props and states
+- Verify user interactions and event handlers
+- Test form validation and submission
+- Tools: Jest, React Testing Library
 
-**Coverage:**
+**Integration Tests**
 
-- All API endpoints with various input scenarios
-- Database operations and transactions
-- Service-to-service communication
-- Authentication and authorization flows
+- Test page-level components with mocked API responses
+- Verify navigation and routing
+- Test authentication flows
+- Tools: Jest, React Testing Library
 
-**Key Test Scenarios:**
+**E2E Tests**
 
-- Complete user registration and login flow
-- Product creation and search workflow
-- Pitch creation, negotiation, and closure
-- Subscription activation and trade counting
+- Test critical user flows end-to-end
+- Seller: Register → Verify → Add Product → Receive Order
+- Buyer: Register → Search → Place Order → Track Shipment
+- Admin: Review Verification → Manage Escrow Dispute
+- Tools: Playwright or Cypress
 
-### End-to-End Testing
+**Example Test Cases**
 
-**Scope:** Complete user workflows from UI to database
+- ProductCard: Displays product information correctly
+- OrderTable: Filters orders by status
+- PartnerSearchFilters: Applies multiple filters correctly
+- EscrowStatusCard: Shows correct actions based on user role and escrow status
 
-**Tools:** Playwright or Cypress
+### Testing Environments
 
-**Key User Journeys:**
-
-1. Buyer registration → profile creation → product search → pitch creation
-2. Seller registration → profile creation → product listing → pitch response
-3. Complete negotiation flow → pitch closure → supplier relationship creation
-4. Subscription selection → trade execution → transaction fee recording
-
-### API Testing
-
-**Documentation:** OpenAPI/Swagger specification
-
-**Testing Approach:**
-
-- Contract testing for API endpoints
-- Request/response validation
-- Error scenario coverage
-- Performance and load testing for critical endpoints
-
-### Security Testing
-
-**Focus Areas:**
-
-- SQL injection prevention
-- XSS protection
-- CSRF token validation
-- JWT token security
-- Password strength requirements
-- Rate limiting effectiveness
-- Data pseudonymization verification
+- **Local**: Developer machines with Docker Compose for services
+- **CI/CD**: Automated test runs on pull requests
+- **Staging**: Pre-production environment for manual QA
+- **Production**: Monitoring and error tracking with Sentry
 
 ### Performance Testing
 
-**Metrics:**
-
-- API response time < 200ms for 95th percentile
-- Search query response < 500ms
-- Database query optimization
-- Caching effectiveness
-- Concurrent user handling (target: 1000+ simultaneous users)
+- Load testing for product search with 10,000+ products
+- Stress testing for concurrent order processing
+- API response time targets: < 200ms for reads, < 500ms for writes
+- Tools: k6 or Artillery
 
 ## Security Considerations
 
 ### Authentication & Authorization
 
-- JWT tokens with 15-minute access token expiry
-- Refresh tokens with 7-day expiry
-- Secure HTTP-only cookies for token storage
-- Role-based access control (RBAC) for Buyer/Seller permissions
+- JWT-based authentication with refresh tokens
+- Role-based access control (RBAC) for seller, buyer, admin routes
+- API endpoints protected with role middleware
+- Session management with Redis for scalability
 
 ### Data Protection
 
-- HTTPS/TLS encryption for all communications
-- Bcrypt password hashing with salt rounds = 12
-- Pseudonymization of PII in logs and analytics
-- Database encryption at rest
-- Secure file upload validation (file type, size limits)
+- Encrypt sensitive data at rest (verification documents, payment info)
+- Use HTTPS for all communications
+- Sanitize user inputs to prevent XSS and SQL injection
+- Implement rate limiting on API endpoints
 
-### API Security
+### Payment Security
 
-- Rate limiting: 100 requests per minute per IP
-- Input validation and sanitization
-- CORS configuration for allowed origins
-- SQL injection prevention via parameterized queries
-- XSS protection via content security policy
+- PCI DSS compliance through payment gateway (Stripe)
+- Never store raw credit card data
+- Escrow funds held in payment gateway, not in application
+- Audit trail for all financial transactions
 
-### Compliance
+### File Upload Security
 
-- GDPR compliance for EU users
-- Data retention policies
-- User data export and deletion capabilities
-- Audit logging for sensitive operations
+- Validate file types and sizes for document uploads
+- Scan uploaded files for malware
+- Store files in isolated S3 buckets with restricted access
+- Generate signed URLs for temporary file access
+
+## Deployment Architecture
+
+### Infrastructure
+
+- **Application Servers**: Docker containers on AWS ECS or similar
+- **Database**: Managed PostgreSQL (AWS RDS)
+- **Cache**: Managed Redis (AWS ElastiCache)
+- **File Storage**: AWS S3 with CloudFront CDN
+- **Load Balancer**: Application Load Balancer for high availability
+
+### CI/CD Pipeline
+
+1. Code push triggers GitHub Actions workflow
+2. Run linting and type checking
+3. Run unit and integration tests
+4. Build Docker images
+5. Push images to container registry
+6. Deploy to staging environment
+7. Run E2E tests on staging
+8. Manual approval for production deployment
+9. Deploy to production with blue-green strategy
+
+### Monitoring & Observability
+
+- Application logs: CloudWatch or ELK stack
+- Error tracking: Sentry
+- Performance monitoring: New Relic or Datadog
+- Uptime monitoring: Pingdom or UptimeRobot
+- Custom metrics: Order volume, verification queue length, escrow disputes
+
+## Scalability Considerations
+
+### Database Optimization
+
+- Index frequently queried fields (verification_status, location, etc.)
+- Implement database connection pooling
+- Use read replicas for search queries
+- Partition large tables (orders, products) by date
+
+### Caching Strategy
+
+- Cache product catalog data with Redis (TTL: 5 minutes)
+- Cache partner directory search results (TTL: 10 minutes)
+- Cache user profile data in session
+- Invalidate cache on data updates
+
+### API Optimization
+
+- Implement pagination for list endpoints (default: 20 items)
+- Use GraphQL or field selection for flexible data fetching
+- Compress API responses with gzip
+- Implement API response caching with ETags
+
+### Frontend Optimization
+
+- Server-side rendering for SEO-critical pages (product listings, seller stores)
+- Static generation for public pages where possible
+- Image optimization with Next.js Image component
+- Code splitting and lazy loading for large components
+- CDN for static assets
