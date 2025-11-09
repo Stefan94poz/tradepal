@@ -4,10 +4,12 @@ import {
   createWorkflow,
   WorkflowResponse,
 } from "@medusajs/framework/workflows-sdk";
+import NotificationModuleService from "../../modules/notification/service";
 
 type OrderAcceptInput = {
   orderId: string;
   sellerId: string;
+  buyerId: string;
   estimatedFulfillmentDays?: number;
   notes?: string;
 };
@@ -41,9 +43,19 @@ const acceptOrderStep = createStep(
 
 const notifyBuyerStep = createStep(
   "notify-buyer-order-accepted",
-  async (input: { orderId: string }) => {
-    // TODO: Send email/notification to buyer
-    console.log(`Buyer notified: Order ${input.orderId} accepted by seller`);
+  async (input: { orderId: string; buyerId: string }, { container }) => {
+    const notificationService: NotificationModuleService =
+      container.resolve("notificationModuleService");
+    
+    await notificationService.createNotification({
+      user_id: input.buyerId,
+      type: "order_accepted",
+      title: "Order Accepted",
+      message: `Your order #${input.orderId} has been accepted by the seller.`,
+      data: { order_id: input.orderId },
+      send_email: true,
+    });
+
     return new StepResponse({ notified: true });
   }
 );
@@ -52,7 +64,7 @@ export const acceptOrderWorkflow = createWorkflow(
   "accept-order",
   (input: OrderAcceptInput) => {
     const result = acceptOrderStep(input);
-    notifyBuyerStep({ orderId: input.orderId });
+    notifyBuyerStep({ orderId: input.orderId, buyerId: input.buyerId });
 
     return new WorkflowResponse(result);
   }

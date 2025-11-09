@@ -40,6 +40,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/search",
     },
     {
+      resolve: "./src/modules/notification",
+    },
+    {
       resolve: "@medusajs/medusa/payment",
       options: {
         providers: [

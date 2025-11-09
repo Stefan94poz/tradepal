@@ -8,14 +8,15 @@ import { USER_PROFILE_MODULE } from "../../modules/user-profile";
 import UserProfileModuleService from "../../modules/user-profile/service";
 import NotificationModuleService from "../../modules/notification/service";
 
-type ApproveVerificationInput = {
+type RejectVerificationInput = {
   verificationId: string;
   reviewedBy: string;
+  reason: string;
 };
 
-const approveVerificationStep = createStep(
-  "approve-verification",
-  async (input: ApproveVerificationInput, { container }) => {
+const rejectVerificationStep = createStep(
+  "reject-verification",
+  async (input: RejectVerificationInput, { container }) => {
     const userProfileService: UserProfileModuleService =
       container.resolve(USER_PROFILE_MODULE);
 
@@ -25,7 +26,8 @@ const approveVerificationStep = createStep(
         id: input.verificationId,
       },
       data: {
-        status: "approved",
+        status: "rejected",
+        rejection_reason: input.reason,
         reviewed_at: new Date(),
         reviewed_by: input.reviewedBy,
       },
@@ -40,8 +42,7 @@ const approveVerificationStep = createStep(
           user_id: verificationRecord.user_id,
         },
         data: {
-          verification_status: "verified",
-          verified_at: new Date(),
+          verification_status: "rejected",
         },
       });
     } else {
@@ -50,8 +51,7 @@ const approveVerificationStep = createStep(
           user_id: verificationRecord.user_id,
         },
         data: {
-          verification_status: "verified",
-          verified_at: new Date(),
+          verification_status: "rejected",
         },
       });
     }
@@ -62,9 +62,10 @@ const approveVerificationStep = createStep(
     
     await notificationService.createNotification({
       user_id: verificationRecord.user_id,
-      type: "verification_approved",
-      title: "Profile Verified",
-      message: "Your profile has been successfully verified. You can now access all platform features.",
+      type: "verification_rejected",
+      title: "Verification Requires Attention",
+      message: `Your verification documents have been reviewed and require resubmission. Reason: ${input.reason}`,
+      data: { reason: input.reason },
       send_email: true,
     });
 
@@ -87,6 +88,7 @@ const approveVerificationStep = createStep(
       },
       data: {
         status: "pending",
+        rejection_reason: null,
         reviewed_at: null,
         reviewed_by: null,
       },
@@ -100,7 +102,6 @@ const approveVerificationStep = createStep(
         },
         data: {
           verification_status: "pending",
-          verified_at: null,
         },
       });
     } else {
@@ -110,17 +111,16 @@ const approveVerificationStep = createStep(
         },
         data: {
           verification_status: "pending",
-          verified_at: null,
         },
       });
     }
   }
 );
 
-export const approveVerificationWorkflow = createWorkflow(
-  "approve-verification",
-  (input: ApproveVerificationInput) => {
-    const result = approveVerificationStep(input);
+export const rejectVerificationWorkflow = createWorkflow(
+  "reject-verification",
+  (input: RejectVerificationInput) => {
+    const result = rejectVerificationStep(input);
     return new WorkflowResponse(result);
   }
 );

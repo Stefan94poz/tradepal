@@ -6,6 +6,7 @@ import {
 } from "@medusajs/framework/workflows-sdk";
 import { ESCROW_MODULE } from "../../modules/escrow";
 import EscrowModuleService from "../../modules/escrow/service";
+import NotificationModuleService from "../../modules/notification/service";
 import Stripe from "stripe";
 
 type CreateEscrowInput = {
@@ -79,6 +80,19 @@ const createEscrowRecordStep = createStep(
       refunded_at: null,
       disputed_at: null,
       auto_release_at: null,
+    });
+
+    // Send notification to buyer
+    const notificationService: NotificationModuleService =
+      container.resolve("notificationModuleService");
+    
+    await notificationService.createNotification({
+      user_id: input.escrowData.buyerId,
+      type: "escrow_created",
+      title: "Payment Held Securely",
+      message: `Payment for order #${input.escrowData.orderId} is being held securely in escrow.`,
+      data: { order_id: input.escrowData.orderId },
+      send_email: true,
     });
 
     return new StepResponse(escrow, escrow.id);

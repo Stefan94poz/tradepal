@@ -6,9 +6,12 @@ import {
 } from "@medusajs/framework/workflows-sdk";
 import { SHIPMENT_MODULE } from "../../modules/shipment";
 import ShipmentModuleService from "../../modules/shipment/service";
+import NotificationModuleService from "../../modules/notification/service";
 
 type UpdateTrackingInput = {
   trackingId: string;
+  buyerId?: string;
+  orderId?: string;
   status:
     | "picked_up"
     | "in_transit"
@@ -51,7 +54,20 @@ const updateTrackingStatusStep = createStep(
       data: updateData,
     });
 
-    // TODO: Send notification to buyer and seller about status change
+    // Send notification if delivered
+    if (input.status === "delivered" && input.buyerId && input.orderId) {
+      const notificationService: NotificationModuleService =
+        container.resolve("notificationModuleService");
+      
+      await notificationService.createNotification({
+        user_id: input.buyerId,
+        type: "shipment_delivered",
+        title: "Order Delivered",
+        message: `Your order #${input.orderId} has been delivered! Please confirm delivery to release payment.`,
+        data: { order_id: input.orderId },
+        send_email: true,
+      });
+    }
 
     return new StepResponse(tracking[0]);
   }

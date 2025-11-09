@@ -4,10 +4,12 @@ import {
   createWorkflow,
   WorkflowResponse,
 } from "@medusajs/framework/workflows-sdk";
+import NotificationModuleService from "../../modules/notification/service";
 
 type OrderDeclineInput = {
   orderId: string;
   sellerId: string;
+  buyerId: string;
   reason: string;
 };
 
@@ -50,11 +52,19 @@ const refundPaymentStep = createStep(
 
 const notifyBuyerDeclineStep = createStep(
   "notify-buyer-order-declined",
-  async (input: { orderId: string; reason: string }) => {
-    // TODO: Send notification to buyer about decline
-    console.log(
-      `Buyer notified: Order ${input.orderId} declined. Reason: ${input.reason}`
-    );
+  async (input: { orderId: string; buyerId: string; reason: string }, { container }) => {
+    const notificationService: NotificationModuleService =
+      container.resolve("notificationModuleService");
+    
+    await notificationService.createNotification({
+      user_id: input.buyerId,
+      type: "order_declined",
+      title: "Order Declined",
+      message: `Your order #${input.orderId} has been declined by the seller. Reason: ${input.reason}`,
+      data: { order_id: input.orderId, reason: input.reason },
+      send_email: true,
+    });
+
     return new StepResponse({ notified: true });
   }
 );
@@ -66,6 +76,7 @@ export const declineOrderWorkflow = createWorkflow(
     refundPaymentStep({ orderId: input.orderId });
     notifyBuyerDeclineStep({
       orderId: input.orderId,
+      buyerId: input.buyerId,
       reason: input.reason,
     });
 

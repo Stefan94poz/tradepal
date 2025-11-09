@@ -6,11 +6,13 @@ import {
 } from "@medusajs/framework/workflows-sdk";
 import { SHIPMENT_MODULE } from "../../modules/shipment";
 import ShipmentModuleService from "../../modules/shipment/service";
+import NotificationModuleService from "../../modules/notification/service";
 
 type AddTrackingInput = {
   orderId: string;
   carrier: string;
   trackingNumber: string;
+  buyerId: string;
   estimatedDelivery?: Date;
   trackingUrl?: string;
 };
@@ -31,6 +33,23 @@ const addTrackingStep = createStep(
       shipped_at: new Date(),
       last_updated: new Date(),
       tracking_url: input.trackingUrl || null,
+    });
+
+    // Send notification to buyer
+    const notificationService: NotificationModuleService =
+      container.resolve("notificationModuleService");
+    
+    await notificationService.createNotification({
+      user_id: input.buyerId,
+      type: "shipment_created",
+      title: "Order Shipped",
+      message: `Your order #${input.orderId} has been shipped! Tracking: ${input.trackingNumber}`,
+      data: {
+        order_id: input.orderId,
+        tracking_number: input.trackingNumber,
+        carrier: input.carrier,
+      },
+      send_email: true,
     });
 
     return new StepResponse(tracking, tracking.id);
