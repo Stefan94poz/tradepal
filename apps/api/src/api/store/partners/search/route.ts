@@ -27,16 +27,18 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // Use the searchPartners method if we have array filters
     if (lookingFor || offers) {
       const searchFilters: any = { ...filters };
-      
+
       if (lookingFor) {
-        searchFilters.lookingFor = lookingFor.split(',');
-      }
-      
-      if (offers) {
-        searchFilters.offers = offers.split(',');
+        searchFilters.lookingFor = lookingFor.split(",");
       }
 
-      const partners = await (partnerModuleService as any).searchPartners(searchFilters);
+      if (offers) {
+        searchFilters.offers = offers.split(",");
+      }
+
+      const partners = await (partnerModuleService as any).searchPartners(
+        searchFilters
+      );
 
       res.json({
         partners: partners.map((partner: any) => ({
@@ -56,7 +58,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       });
     } else {
       // Simple list with basic filters
-      const partners = await (partnerModuleService as any).listPartnerProfiles(filters);
+      const partners = await (partnerModuleService as any).listPartnerProfiles(
+        filters
+      );
 
       res.json({
         partners: partners.map((partner: any) => ({

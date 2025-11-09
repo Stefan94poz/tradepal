@@ -1,7 +1,4 @@
-import {
-  createStep,
-  StepResponse,
-} from "@medusajs/framework/workflows-sdk";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type SubmitVerificationStepInput = {
   userId: string;
@@ -54,7 +51,8 @@ export const submitVerificationStep = createStep(
   async (compensateData, { container }) => {
     if (!compensateData) return;
 
-    const { profileId, previousStatus, previousDocuments, profileType } = compensateData;
+    const { profileId, previousStatus, previousDocuments, profileType } =
+      compensateData;
 
     // Rollback: Restore previous verification status and documents
     const moduleService =

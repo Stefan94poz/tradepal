@@ -1,11 +1,13 @@
-import {
-  createStep,
-  StepResponse,
-} from "@medusajs/framework/workflows-sdk";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type UpdateTrackingStatusStepInput = {
   trackingId: string;
-  status: "pending" | "in_transit" | "out_for_delivery" | "delivered" | "failed";
+  status:
+    | "pending"
+    | "in_transit"
+    | "out_for_delivery"
+    | "delivered"
+    | "failed";
   currentLocation?: string;
   estimatedDelivery?: string;
   eventDescription?: string;
@@ -25,9 +27,9 @@ export const updateTrackingStatusStep = createStep(
     const shipmentModuleService = container.resolve("shipmentModuleService");
 
     // Get current tracking details
-    const tracking = await (shipmentModuleService as any).retrieveShipmentTracking(
-      trackingId
-    );
+    const tracking = await (
+      shipmentModuleService as any
+    ).retrieveShipmentTracking(trackingId);
 
     if (!tracking) {
       throw new Error(`Tracking ${trackingId} not found`);

@@ -1,10 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { approveVerificationWorkflow } from "../../../../../workflows/approve-verification";
 
-export async function POST(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
     const { profileType, approvedBy } = req.body as {

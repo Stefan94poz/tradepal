@@ -1,4 +1,4 @@
-import { model } from "@medusajs/framework/utils"
+import { model } from "@medusajs/framework/utils";
 
 const BuyerProfile = model.define("buyer_profile", {
   id: model.id().primaryKey(),
@@ -9,9 +9,11 @@ const BuyerProfile = model.define("buyer_profile", {
   country: model.text(),
   city: model.text(),
   address: model.text(),
-  verification_status: model.enum(['pending', 'verified', 'rejected']).default('pending'),
+  verification_status: model
+    .enum(["pending", "verified", "rejected"])
+    .default("pending"),
   verification_documents: model.array(),
   is_buyer: model.boolean().default(true),
-})
+});
 
-export default BuyerProfile
+export default BuyerProfile;

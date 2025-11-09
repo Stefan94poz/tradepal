@@ -1,7 +1,4 @@
-import {
-  createStep,
-  StepResponse,
-} from "@medusajs/framework/workflows-sdk";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type HoldPaymentStepInput = {
   amount: number;
@@ -40,7 +37,9 @@ export const holdPaymentStep = createStep(
     const { paymentIntentId } = compensateData;
 
     // Rollback: Cancel payment hold
-    console.log(`[PAYMENT ROLLBACK] Canceling payment hold: ${paymentIntentId}`);
+    console.log(
+      `[PAYMENT ROLLBACK] Canceling payment hold: ${paymentIntentId}`
+    );
 
     // TODO: Implement actual payment cancellation with payment provider
   }

@@ -1,16 +1,15 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
-export async function GET(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
 
     const partnerModuleService = req.scope.resolve("partnerModuleService");
 
     // Retrieve partner profile
-    const partner = await (partnerModuleService as any).retrievePartnerProfile(id);
+    const partner = await (partnerModuleService as any).retrievePartnerProfile(
+      id
+    );
 
     if (!partner) {
       return res.status(404).json({

@@ -1,7 +1,4 @@
-import {
-  createStep,
-  StepResponse,
-} from "@medusajs/framework/workflows-sdk";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type CreateEscrowRecordStepInput = {
   orderId: string;
@@ -15,14 +12,8 @@ type CreateEscrowRecordStepInput = {
 export const createEscrowRecordStep = createStep(
   "create-escrow-record-step",
   async (input: CreateEscrowRecordStepInput, { container }) => {
-    const {
-      orderId,
-      buyerId,
-      sellerId,
-      amount,
-      currency,
-      paymentIntentId,
-    } = input;
+    const { orderId, buyerId, sellerId, amount, currency, paymentIntentId } =
+      input;
 
     const escrowModuleService = container.resolve("escrowModuleService");
 

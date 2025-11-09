@@ -1,10 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { addTrackingWorkflow } from "../../../../../workflows/add-tracking";
 
-export async function POST(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
     const { carrier, trackingNumber, sellerId } = req.body as {
@@ -45,17 +42,16 @@ export async function POST(
   }
 }
 
-export async function GET(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
 
     const shipmentModuleService = req.scope.resolve("shipmentModuleService");
 
     // Get tracking by order ID
-    const trackings = await (shipmentModuleService as any).listShipmentTrackings({
+    const trackings = await (
+      shipmentModuleService as any
+    ).listShipmentTrackings({
       order_id: id,
     });
 

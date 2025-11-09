@@ -1,10 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { releaseEscrowWorkflow } from "../../../../../../workflows/release-escrow";
 
-export async function POST(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
     const { releasedBy } = req.body as { releasedBy: string };

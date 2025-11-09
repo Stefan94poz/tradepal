@@ -1,10 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { disputeEscrowWorkflow } from "../../../../../../workflows/dispute-escrow";
 
-export async function POST(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
     const { disputedBy, reason } = req.body as {

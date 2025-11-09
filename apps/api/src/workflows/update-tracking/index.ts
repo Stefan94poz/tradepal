@@ -6,7 +6,12 @@ import { updateTrackingStatusStep } from "./steps/update-tracking-status";
 
 type UpdateTrackingInput = {
   trackingId: string;
-  status: "pending" | "in_transit" | "out_for_delivery" | "delivered" | "failed";
+  status:
+    | "pending"
+    | "in_transit"
+    | "out_for_delivery"
+    | "delivered"
+    | "failed";
   currentLocation?: string;
   estimatedDelivery?: string;
   eventDescription?: string;

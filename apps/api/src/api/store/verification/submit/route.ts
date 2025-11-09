@@ -22,9 +22,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       });
     }
 
-    if (!Array.isArray(verificationDocuments) || verificationDocuments.length === 0) {
+    if (
+      !Array.isArray(verificationDocuments) ||
+      verificationDocuments.length === 0
+    ) {
       return res.status(400).json({
-        error: "verificationDocuments must be a non-empty array of document URLs",
+        error:
+          "verificationDocuments must be a non-empty array of document URLs",
       });
     }
 

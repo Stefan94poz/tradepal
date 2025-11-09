@@ -1,10 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { refundEscrowWorkflow } from "../../../../../workflows/refund-escrow";
 
-export async function POST(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
     const { refundedBy, reason } = req.body as {
@@ -21,7 +18,9 @@ export async function POST(
     const escrowModuleService = req.scope.resolve("escrowModuleService");
 
     // Get escrow by ID
-    const escrow = await (escrowModuleService as any).retrieveEscrowTransaction(id);
+    const escrow = await (escrowModuleService as any).retrieveEscrowTransaction(
+      id
+    );
 
     if (!escrow) {
       return res.status(404).json({

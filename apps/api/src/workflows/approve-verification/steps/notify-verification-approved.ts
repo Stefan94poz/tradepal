@@ -1,7 +1,4 @@
-import {
-  createStep,
-  StepResponse,
-} from "@medusajs/framework/workflows-sdk";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type NotifyVerificationApprovedStepInput = {
   userId: string;

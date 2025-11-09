@@ -1,7 +1,4 @@
-import {
-  createStep,
-  StepResponse,
-} from "@medusajs/framework/workflows-sdk";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type UpdateEscrowStatusStepInput = {
   escrowId: string;
@@ -17,14 +14,18 @@ export const updateEscrowStatusStep = createStep(
     const escrowModuleService = container.resolve("escrowModuleService");
 
     // Get current escrow details
-    const escrow = await (escrowModuleService as any).retrieveEscrowTransaction(escrowId);
+    const escrow = await (escrowModuleService as any).retrieveEscrowTransaction(
+      escrowId
+    );
 
     if (!escrow) {
       throw new Error(`Escrow transaction ${escrowId} not found`);
     }
 
     // Update escrow status
-    const updatedEscrow = await (escrowModuleService as any).updateEscrowTransactions({
+    const updatedEscrow = await (
+      escrowModuleService as any
+    ).updateEscrowTransactions({
       id: escrowId,
       status,
     });

@@ -142,23 +142,6 @@ This plan follows Medusa v2 architecture patterns:
     - _Status: ✅ COMPLETED_
 
 - [ ] 5. Extend Medusa order workflow for B2B operations
-  - _Requirements: 9.4, 11.2, 11.3_
-
-- [ ] 9. Create custom API endpoints for partner directory
-  - Create GET /store/partners/search endpoint with query parameters for filters
-  - Create POST /store/partners/profile endpoint for profile creation/update
-  - Create GET /store/partners/:id endpoint to retrieve partner profile details
-  - Add authentication middleware and verification status check
-  - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-
-- [ ] 10. Create custom API endpoints for shipment tracking
-  - Create POST /store/orders/:id/tracking endpoint for sellers to add tracking info
-  - Create GET /store/orders/:id/tracking endpoint to retrieve tracking details
-  - Create PUT /store/orders/:id/tracking/refresh endpoint for manual tracking updates
-  - Add role-based authorization (sellers can add, both parties can view)
-  - _Requirements: 10.1, 10.2, 10.3, 10.4_
-
-- [ ] 5. Extend Medusa order workflow for B2B operations
   - [ ] 5.1 Create custom order workflow or extend existing
     - Create workflow for B2B order creation with seller-specific fields
     - Add workflow step for seller notification when new order is created
@@ -199,6 +182,74 @@ This plan follows Medusa v2 architecture patterns:
     - Implement email sending in notification subscribers
     - Add notification preferences to user profiles
     - _Requirements: 7.3, 7.4, 8.2, 9.1, 10.5_
+
+- [ ] 7.3 Integrate third-party services for platform features
+  - [ ] 7.3.1 Integrate MeiliSearch for product search
+    - Install `@medusajs/medusa-plugin-meilisearch` package
+    - Configure MeiliSearch plugin in `medusa-config.ts`
+    - Set environment variables: `MEILISEARCH_HOST`, `MEILISEARCH_API_KEY`
+    - Add MeiliSearch indexes for products with custom attributes
+    - Configure searchable attributes: name, description, metadata fields
+    - Implement faceted search filters for B2B (min_order_qty, seller_location)
+    - Test product indexing and search queries
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+    - _Reference: https://docs.medusajs.com/resources/integrations/meilisearch_
+  - [ ] 7.3.2 Integrate MinIO for file storage
+    - Install `@medusajs/medusa-file-minio` package
+    - Configure MinIO file service in `medusa-config.ts`
+    - Set environment variables: `MINIO_ENDPOINT`, `MINIO_BUCKET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
+    - Create buckets for product images and verification documents
+    - Implement signed URL generation for secure document access
+    - Add file upload endpoints for images and documents
+    - Configure CORS for MinIO bucket access
+    - _Requirements: 1.4, 1.5, 2.2, 4.5_
+    - _Reference: https://docs.medusajs.com/resources/integrations/file/minio_
+  - [ ] 7.3.3 Integrate PostHog for analytics
+    - Install `posthog-node` package
+    - Create analytics service in `src/services/analytics.ts`
+    - Initialize PostHog client with project API key
+    - Add PostHog tracking to key events (orders, verifications, searches)
+    - Create event subscribers for automatic tracking
+    - Implement user identification and properties
+    - Add feature flags support for A/B testing
+    - Set environment variable: `POSTHOG_API_KEY`
+    - _Requirements: 11.1, 11.4_
+    - _Reference: https://posthog.com/docs/libraries/node_
+  - [ ] 7.3.4 Integrate SendGrid for email notifications
+    - Install `@sendgrid/mail` package
+    - Create email service in `src/services/email.ts` using SendGrid API
+    - Set environment variable: `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`
+    - Create email templates for verification, orders, escrow, shipment
+    - Implement template rendering with dynamic data
+    - Add email sending in workflow notification steps
+    - Configure webhook for delivery tracking
+    - Test email delivery for all notification types
+    - _Requirements: 7.3, 7.4, 8.2, 9.1, 10.5_
+    - _Reference: https://docs.sendgrid.com/for-developers/sending-email/api-getting-started_
+  - [ ] 7.3.5 Integrate Stripe for payment processing
+    - Install `@medusajs/medusa-payment-stripe` package
+    - Configure Stripe payment provider in `medusa-config.ts`
+    - Set environment variables: `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`
+    - Enable Payment Intents API for escrow holds
+    - Create webhook handler at `/hooks/stripe` for payment events
+    - Implement payment hold in create-escrow workflow
+    - Implement payment capture in release-escrow workflow
+    - Implement refund in refund-escrow workflow
+    - Test payment flow: hold → capture → refund
+    - _Requirements: 9.1, 9.2, 9.3, 9.4_
+    - _Reference: https://docs.medusajs.com/resources/commerce-modules/payment/payment-provider/stripe_
+  - [ ] 7.3.6 Integrate Webshipper for shipment tracking
+    - Install Webshipper SDK or create custom integration
+    - Create shipment service in `src/services/webshipper.ts`
+    - Set environment variables: `WEBSHIPPER_API_TOKEN`, `WEBSHIPPER_BASE_URL`
+    - Implement carrier API integration (DHL, FedEx, UPS via Webshipper)
+    - Create webhook handler for tracking updates at `/hooks/webshipper`
+    - Update shipment tracking module with real-time carrier data
+    - Implement automatic tracking status updates in workflows
+    - Add fallback for manual tracking entry
+    - Test tracking creation and status updates
+    - _Requirements: 10.2, 10.3, 10.4_
+    - _Reference: https://docs.webshipper.io/api/_
 
 - [ ] 8. Initialize Next.js 15 frontend project
   - Create Next.js 15 project with App Router
@@ -347,92 +398,67 @@ This plan follows Medusa v2 architecture patterns:
     - Create reusable SearchInput component with debouncing
     - _Requirements: 5.3, 5.4, 6.2, 6.3_
 
-- [ ] 22. Implement notification system
-  - [ ] 22.1 Create notification service in backend
+- [ ] 22. Implement payment UI with Stripe Elements
+  - [ ] 22.1 Build payment UI components
+    - Install `@stripe/stripe-js` and `@stripe/react-stripe-js` packages
+    - Create PaymentForm component with Stripe Elements
+    - Build payment confirmation page
+    - Implement payment error handling and retry logic
+    - Add 3D Secure authentication support
+    - _Requirements: 9.1, 9.5_
+
+- [ ] 23. Implement notification system
+  - [ ] 23.1 Create notification service in backend
     - Implement email notification service with template support
     - Create notification templates for verification, orders, escrow, shipment events
     - Add notification preferences to user profiles
     - _Requirements: 7.3, 7.4, 8.2, 10.5_
-  - [ ] 22.2 Build in-app notification UI
+  - [ ] 23.2 Build in-app notification UI
     - Create notification bell icon with unread count in header
     - Build notification dropdown with recent notifications
     - Implement notification list page with filtering
     - Add real-time notification updates using polling or WebSockets
     - _Requirements: 8.2, 9.1, 10.5_
 
-- [ ] 23. Implement file upload and storage
-  - Create file upload utility for product images and verification documents
-  - Integrate with S3-compatible storage service
-  - Implement image optimization and resizing for product images
-  - Add file type and size validation
-  - Generate signed URLs for secure document access
-  - _Requirements: 1.4, 1.5, 2.2, 4.5_
-
-- [ ] 24. Set up payment gateway integration
-  - [ ] 24.1 Integrate Stripe for payment processing
-    - Set up Stripe account and API keys
-    - Implement payment intent creation for escrow
-    - Add webhook handlers for payment events
-    - _Requirements: 9.1, 9.2_
-  - [ ] 24.2 Build payment UI components
-    - Create payment form with Stripe Elements
-    - Build payment confirmation page
-    - Implement payment error handling and retry logic
-    - _Requirements: 9.1, 9.5_
-
-- [ ] 25. Integrate shipping carrier APIs
-  - Research and select primary shipping carriers (e.g., DHL, FedEx, UPS)
-  - Implement carrier API integration for tracking updates
-  - Create carrier adapter pattern for supporting multiple carriers
-  - Add fallback for manual tracking entry when API is unavailable
-  - _Requirements: 10.2, 10.3, 10.4_
-
-- [ ] 26. Implement search optimization
-  - Add full-text search indexes on product names and descriptions
-  - Implement search result ranking algorithm
-  - Add search query caching with Redis
-  - Optimize database queries with proper indexes
-  - _Requirements: 5.1, 5.2, 6.2_
-
-- [ ] 27. Set up monitoring and error tracking
+- [ ] 24. Set up monitoring and error tracking
   - Integrate Sentry for error tracking in both frontend and backend
   - Set up application logging with structured logs
   - Create custom metrics for business events (orders, verifications, escrow)
   - Implement health check endpoints for monitoring
   - _Requirements: All requirements benefit from monitoring_
 
-- [ ] 28. Configure deployment pipeline
-  - [ ] 28.1 Set up Docker containers
+- [ ] 25. Configure deployment pipeline
+  - [ ] 25.1 Set up Docker containers
     - Create Dockerfile for Medusa.js backend
     - Create Dockerfile for Next.js frontend
     - Create docker-compose.yml for local development
     - _Requirements: All requirements depend on deployment_
-  - [ ] 28.2 Configure CI/CD with GitHub Actions
+  - [ ] 25.2 Configure CI/CD with GitHub Actions
     - Create workflow for running tests on pull requests
     - Add workflow for building and pushing Docker images
     - Implement deployment workflow for staging and production
     - Add environment-specific configuration management
     - _Requirements: All requirements depend on deployment_
 
-- [ ]\* 29. Write integration tests for critical flows
-  - [ ]\* 29.1 Test seller registration and verification flow
+- [ ] 26. Write integration tests for critical flows
+  - [ ] 26.1 Test seller registration and verification flow
     - Write test for seller registration with profile creation
     - Test verification document submission and approval process
     - Verify seller can access dashboard after verification
     - _Requirements: 1.1, 1.2, 1.5, 7.1, 7.3_
-  - [ ]\* 29.2 Test order and escrow flow
+  - [ ] 26.2 Test order and escrow flow
     - Write test for complete order flow from creation to completion
     - Test escrow creation when order is accepted
     - Test escrow release on delivery confirmation
     - Test dispute flagging and admin resolution
     - _Requirements: 8.1, 8.4, 8.5, 9.1, 9.3, 9.4_
-  - [ ]\* 29.3 Test product search and partner directory
+  - [ ] 26.3 Test product search and partner directory
     - Write test for global product search with filters
     - Test partner directory search with multiple filter combinations
     - Verify only verified profiles appear in partner directory
     - _Requirements: 5.1, 5.3, 5.4, 6.2, 6.3, 6.5_
 
-- [ ]\* 30. Create API documentation
+- [ ] 27. Create API documentation
   - Document all custom API endpoints with request/response examples
   - Create Postman collection for API testing
   - Generate OpenAPI/Swagger specification

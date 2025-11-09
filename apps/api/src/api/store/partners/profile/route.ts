@@ -21,13 +21,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       offers: string[];
     };
 
-    if (
-      !userId ||
-      !profileType ||
-      !companyName ||
-      !country ||
-      !industry
-    ) {
+    if (!userId || !profileType || !companyName || !country || !industry) {
       return res.status(400).json({
         error:
           "Missing required fields: userId, profileType, companyName, country, industry",
