@@ -18,6 +18,7 @@ TradePal integrates with the following services:
 ## 1. MeiliSearch Integration
 
 ### Purpose
+
 Provides fast, typo-tolerant search for products with faceted filtering for B2B features.
 
 ### Installation
@@ -30,12 +31,14 @@ yarn add @medusajs/medusa-plugin-meilisearch
 ### Configuration
 
 **Environment Variables (`.env`):**
+
 ```env
 MEILISEARCH_HOST=http://localhost:7700
 MEILISEARCH_API_KEY=masterKey
 ```
 
 **medusa-config.ts:**
+
 ```typescript
 import { defineConfig } from "@medusajs/framework/utils";
 
@@ -65,10 +68,7 @@ export default defineConfig({
                 "metadata.seller_location",
                 "metadata.min_order_quantity",
               ],
-              sortableAttributes: [
-                "variants.prices.amount",
-                "created_at",
-              ],
+              sortableAttributes: ["variants.prices.amount", "created_at"],
             },
           },
         },
@@ -81,20 +81,21 @@ export default defineConfig({
 ### Usage
 
 **Search API Endpoint (`src/api/store/products/search/route.ts`):**
+
 ```typescript
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const searchService = req.scope.resolve("searchService");
-  
+
   const { q, limit = 20, offset = 0, filters } = req.query;
-  
+
   const results = await searchService.search("products", q, {
     limit,
     offset,
     filter: filters,
   });
-  
+
   res.json(results);
 }
 ```
@@ -102,6 +103,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 ### Docker Setup
 
 **docker-compose.yml:**
+
 ```yaml
 services:
   meilisearch:
@@ -119,6 +121,7 @@ volumes:
 ```
 
 ### Documentation
+
 - [Medusa MeiliSearch Plugin](https://docs.medusajs.com/resources/integrations/meilisearch)
 - [MeiliSearch Docs](https://www.meilisearch.com/docs)
 
@@ -127,6 +130,7 @@ volumes:
 ## 2. MinIO Integration
 
 ### Purpose
+
 S3-compatible object storage for product images and verification documents.
 
 ### Installation
@@ -139,6 +143,7 @@ yarn add @medusajs/medusa-file-minio
 ### Configuration
 
 **Environment Variables (`.env`):**
+
 ```env
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
@@ -149,6 +154,7 @@ MINIO_USE_SSL=false
 ```
 
 **medusa-config.ts:**
+
 ```typescript
 import { defineConfig } from "@medusajs/framework/utils";
 
@@ -172,23 +178,25 @@ export default defineConfig({
 ### Usage
 
 **File Upload API (`src/api/admin/uploads/route.ts`):**
+
 ```typescript
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const fileService = req.scope.resolve("fileService");
-  
+
   const files = req.files as Express.Multer.File[];
-  
+
   const uploads = await Promise.all(
     files.map((file) => fileService.upload(file))
   );
-  
+
   res.json({ uploads });
 }
 ```
 
 **Generate Signed URL:**
+
 ```typescript
 const fileService = req.scope.resolve("fileService");
 const url = await fileService.getPresignedDownloadUrl({
@@ -200,6 +208,7 @@ const url = await fileService.getPresignedDownloadUrl({
 ### Docker Setup
 
 **docker-compose.yml:**
+
 ```yaml
 services:
   minio:
@@ -219,6 +228,7 @@ volumes:
 ```
 
 ### Documentation
+
 - [Medusa MinIO Plugin](https://docs.medusajs.com/resources/integrations/file/minio)
 - [MinIO Docs](https://min.io/docs/minio/linux/index.html)
 
@@ -227,6 +237,7 @@ volumes:
 ## 3. PostHog Integration
 
 ### Purpose
+
 Analytics, event tracking, and feature flags for A/B testing.
 
 ### Installation
@@ -239,12 +250,14 @@ yarn add posthog-node
 ### Configuration
 
 **Environment Variables (`.env`):**
+
 ```env
 POSTHOG_API_KEY=phc_your_project_api_key
 POSTHOG_HOST=https://app.posthog.com
 ```
 
 **Analytics Service (`src/services/analytics.ts`):**
+
 ```typescript
 import { PostHog } from "posthog-node";
 
@@ -257,7 +270,11 @@ export default class AnalyticsService {
     });
   }
 
-  async trackEvent(userId: string, event: string, properties?: Record<string, any>) {
+  async trackEvent(
+    userId: string,
+    event: string,
+    properties?: Record<string, any>
+  ) {
     this.client.capture({
       distinctId: userId,
       event,
@@ -285,6 +302,7 @@ export default class AnalyticsService {
 ### Usage in Subscribers
 
 **Order Tracking (`src/subscribers/order-placed.ts`):**
+
 ```typescript
 import { SubscriberArgs } from "@medusajs/framework";
 
@@ -293,7 +311,7 @@ export default async function orderPlacedHandler({
   container,
 }: SubscriberArgs<{ id: string }>) {
   const analyticsService = container.resolve("analyticsService");
-  
+
   await analyticsService.trackEvent(data.customer_id, "Order Placed", {
     order_id: data.id,
     total: data.total,
@@ -303,6 +321,7 @@ export default async function orderPlacedHandler({
 ```
 
 ### Documentation
+
 - [PostHog Node.js Library](https://posthog.com/docs/libraries/node)
 - [PostHog Feature Flags](https://posthog.com/docs/feature-flags)
 
@@ -311,6 +330,7 @@ export default async function orderPlacedHandler({
 ## 4. SendGrid Integration
 
 ### Purpose
+
 Transactional email notifications for verifications, orders, and escrow updates.
 
 ### Installation
@@ -323,6 +343,7 @@ yarn add @sendgrid/mail
 ### Configuration
 
 **Environment Variables (`.env`):**
+
 ```env
 SENDGRID_API_KEY=SG.your_api_key
 SENDGRID_FROM_EMAIL=noreply@tradepal.com
@@ -330,6 +351,7 @@ SENDGRID_FROM_NAME=TradePal
 ```
 
 **Email Service (`src/services/email.ts`):**
+
 ```typescript
 import sgMail from "@sendgrid/mail";
 
@@ -350,7 +372,10 @@ export default class EmailService {
     await sgMail.send(msg);
   }
 
-  async sendOrderConfirmation(to: string, data: { orderNumber: string; total: number }) {
+  async sendOrderConfirmation(
+    to: string,
+    data: { orderNumber: string; total: number }
+  ) {
     const msg = {
       to,
       from: {
@@ -364,7 +389,10 @@ export default class EmailService {
     await sgMail.send(msg);
   }
 
-  async sendEscrowReleased(to: string, data: { amount: number; currency: string }) {
+  async sendEscrowReleased(
+    to: string,
+    data: { amount: number; currency: string }
+  ) {
     const msg = {
       to,
       from: {
@@ -383,16 +411,17 @@ export default class EmailService {
 ### Usage in Workflows
 
 **Update notification steps to use SendGrid:**
+
 ```typescript
 // src/workflows/approve-verification/steps/notify-verification-approved.ts
 export const notifyVerificationApprovedStep = createStep(
   "notify-verification-approved-step",
   async (input: NotifyVerificationApprovedStepInput, { container }) => {
     const emailService = container.resolve("emailService");
-    
+
     // Get user email from user service
     const userEmail = "user@example.com"; // TODO: Fetch from user module
-    
+
     await emailService.sendVerificationApproved(userEmail, {
       companyName: "Company Name", // TODO: Fetch from profile
     });
@@ -408,6 +437,7 @@ export const notifyVerificationApprovedStep = createStep(
 ### Email Templates
 
 Create templates in SendGrid dashboard:
+
 - Verification Approved
 - Verification Rejected
 - Order Confirmation
@@ -417,6 +447,7 @@ Create templates in SendGrid dashboard:
 - Shipment Delivered
 
 ### Documentation
+
 - [SendGrid Node.js Library](https://docs.sendgrid.com/for-developers/sending-email/api-getting-started)
 - [Dynamic Templates](https://docs.sendgrid.com/ui/sending-email/how-to-send-an-email-with-dynamic-templates)
 
@@ -425,6 +456,7 @@ Create templates in SendGrid dashboard:
 ## 5. Stripe Integration
 
 ### Purpose
+
 Payment processing for escrow transactions with hold and capture workflow.
 
 ### Installation
@@ -437,12 +469,14 @@ yarn add @medusajs/medusa-payment-stripe
 ### Configuration
 
 **Environment Variables (`.env`):**
+
 ```env
 STRIPE_API_KEY=sk_test_your_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 ```
 
 **medusa-config.ts:**
+
 ```typescript
 import { defineConfig } from "@medusajs/framework/utils";
 
@@ -463,6 +497,7 @@ export default defineConfig({
 ### Usage in Workflows
 
 **Hold Payment Step (`src/workflows/create-escrow/steps/hold-payment.ts`):**
+
 ```typescript
 import Stripe from "stripe";
 
@@ -507,6 +542,7 @@ export const holdPaymentStep = createStep(
 ```
 
 **Capture Payment Step:**
+
 ```typescript
 export const capturePaymentStep = createStep(
   "capture-payment-step",
@@ -542,6 +578,7 @@ export const capturePaymentStep = createStep(
 ### Webhook Handler
 
 **Create webhook endpoint (`src/api/webhooks/stripe/route.ts`):**
+
 ```typescript
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import Stripe from "stripe";
@@ -582,6 +619,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 ```
 
 ### Documentation
+
 - [Medusa Stripe Provider](https://docs.medusajs.com/resources/commerce-modules/payment/payment-provider/stripe)
 - [Stripe Payment Intents](https://stripe.com/docs/payments/payment-intents)
 - [Stripe Webhooks](https://stripe.com/docs/webhooks)
@@ -591,6 +629,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 ## 6. Webshipper Integration
 
 ### Purpose
+
 Multi-carrier shipment management and tracking (DHL, FedEx, UPS, etc.).
 
 ### Installation
@@ -603,12 +642,14 @@ yarn add axios
 ### Configuration
 
 **Environment Variables (`.env`):**
+
 ```env
 WEBSHIPPER_API_TOKEN=your_api_token
 WEBSHIPPER_BASE_URL=https://api.webshipper.io/v2
 ```
 
 **Shipment Service (`src/services/webshipper.ts`):**
+
 ```typescript
 import axios from "axios";
 
@@ -619,7 +660,7 @@ export default class WebshipperService {
     this.client = axios.create({
       baseURL: process.env.WEBSHIPPER_BASE_URL,
       headers: {
-        "Authorization": `Bearer ${process.env.WEBSHIPPER_API_TOKEN}`,
+        Authorization: `Bearer ${process.env.WEBSHIPPER_API_TOKEN}`,
         "Content-Type": "application/json",
       },
     });
@@ -663,6 +704,7 @@ export default class WebshipperService {
 ### Usage in Workflows
 
 **Add Tracking with Webshipper (`src/workflows/add-tracking/steps/add-tracking-info.ts`):**
+
 ```typescript
 export const addTrackingInfoStep = createStep(
   "add-tracking-info-step",
@@ -704,6 +746,7 @@ export const addTrackingInfoStep = createStep(
 ### Webhook Handler
 
 **Tracking Updates (`src/api/webhooks/webshipper/route.ts`):**
+
 ```typescript
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
@@ -729,6 +772,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 ```
 
 ### Documentation
+
 - [Webshipper API Docs](https://docs.webshipper.io/api/)
 - [Webshipper Webhooks](https://docs.webshipper.io/api/#webhooks)
 
