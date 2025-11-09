@@ -7,6 +7,7 @@ mode: agent
 ## Medusa v2 Development Notes
 
 This plan follows Medusa v2 architecture patterns:
+
 - **Modules**: All custom features are built as modules with data models and services
 - **Data Model Language (DML)**: Use `model.define()` instead of TypeORM decorators
 - **MikroORM Migrations**: Generate migrations with `npx medusa db:generate <module-name>`
@@ -137,7 +138,7 @@ This plan follows Medusa v2 architecture patterns:
     - _Requirements: 10.1, 10.2, 10.3_
 
 - [ ] 5. Extend Medusa order workflow for B2B operations
-    - _Requirements: 9.4, 11.2, 11.3_
+  - _Requirements: 9.4, 11.2, 11.3_
 
 - [ ] 9. Create custom API endpoints for partner directory
   - Create GET /store/partners/search endpoint with query parameters for filters

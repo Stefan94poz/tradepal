@@ -11,6 +11,7 @@ This document specifies the requirements for a comprehensive B2B (Business-to-Bu
 ### Medusa v2 Architecture Notes
 
 This platform leverages Medusa v2's key features:
+
 - **Modules**: Custom business logic is organized into domain-specific modules (Seller, Buyer, Partner, Escrow, Shipment)
 - **Data Model Language (DML)**: Database tables are defined using Medusa's DML instead of TypeORM entities
 - **Workflows**: Business operations use workflows with built-in rollback and retry mechanisms
