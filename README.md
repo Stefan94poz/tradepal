@@ -34,29 +34,33 @@ This is a Turborepo monorepo containing:
 ### Development
 
 1. **Install dependencies:**
+
    ```bash
    yarn install
    ```
 
 2. **Start Medusa API (Backend) with Docker:**
-   
+
    From the root of the monorepo:
+
    ```bash
    # Using Makefile (recommended)
-   make docker-up
-   
-   # OR using yarn
-   yarn docker:up
+   make up
+
+   # OR using yarn from apps/api
+   cd apps/api && yarn docker:up
    ```
 
    This starts the Medusa backend with PostgreSQL and Redis.
 
 3. **Run database migrations:**
+
    ```bash
    make db-migrate
    ```
 
 4. **Create admin user:**
+
    ```bash
    make api-shell
    # Inside the container:
@@ -65,6 +69,7 @@ This is a Turborepo monorepo containing:
    ```
 
 5. **Start Next.js storefront:**
+
    ```bash
    cd apps/web
    yarn dev
@@ -77,23 +82,32 @@ This is a Turborepo monorepo containing:
 
 ### Docker Commands (from root)
 
-All Docker commands can be run from the root of the monorepo:
+All Docker commands can be run from the root of the monorepo using Make:
 
 ```bash
 # Start containers
-make docker-up          # or: yarn docker:up
+make up
 
 # Stop containers
-make docker-down        # or: yarn docker:down
+make down
 
 # View logs
-make docker-logs        # or: yarn docker:logs
+make logs
 
-# Rebuild containers
-make docker-build       # or: yarn docker:build
+# Rebuild and restart
+make rebuild
 
 # Clean up (removes volumes)
-make docker-clean       # or: yarn docker:clean
+make clean
+
+# Access Medusa container shell
+make api-shell
+
+# Access database shell
+make db-shell
+
+# Run database migrations
+make db-migrate
 
 # View all available commands
 make help
@@ -158,7 +172,6 @@ tradepal/
 ## License
 
 MIT
-
 
 Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
 

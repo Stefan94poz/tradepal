@@ -17,47 +17,4 @@ module.exports = defineConfig({
       sslmode: "disable",
     },
   },
-  modules: [
-    {
-      resolve: "./src/modules/user_profile",
-    },
-    {
-      resolve: "./src/modules/partner_directory",
-    },
-    {
-      resolve: "./src/modules/escrow",
-    },
-    {
-      resolve: "./src/modules/shipment",
-    },
-    {
-      resolve: "./src/modules/b2b_product",
-    },
-    {
-      resolve: "./src/modules/file_storage",
-    },
-    {
-      resolve: "./src/modules/search",
-    },
-    {
-      resolve: "./src/modules/notification",
-    },
-    // Stripe Payment (Optional - uncomment when you have API keys)
-    // {
-    //   resolve: "@medusajs/medusa/payment",
-    //   options: {
-    //     providers: [
-    //       {
-    //         resolve: "@medusajs/medusa/payment-stripe",
-    //         id: "stripe",
-    //         options: {
-    //           apiKey: process.env.STRIPE_API_KEY,
-    //           webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-    //           capture: false, // Manual capture for escrow
-    //         },
-    //       },
-    //     ],
-    //   },
-    // },
-  ],
 });

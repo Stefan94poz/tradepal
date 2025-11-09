@@ -13,29 +13,21 @@
     "medusa"
   ],
   "scripts": {
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
     "build": "medusa build",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "start": "medusa start",
     "dev": "medusa develop",
-    "docker:up": "docker compose up --build -d",
-    "docker:down": "docker compose down",
     "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.927.0",
-    "@aws-sdk/s3-request-presigner": "^3.927.0",
     "@medusajs/admin-sdk": "2.11.3",
     "@medusajs/cli": "2.11.3",
-    "@medusajs/file-local": "^2.11.3",
     "@medusajs/framework": "2.11.3",
-    "@medusajs/medusa": "2.11.3",
-    "@types/formidable": "^3.4.6",
-    "formidable": "3.5.4",
-    "meilisearch": "0.54.0",
-    "minio": "8.0.6",
-    "stripe": "19.3.0"
+    "@medusajs/medusa": "2.11.3"
   },
   "devDependencies": {
     "@medusajs/test-utils": "2.11.3",
@@ -56,6 +48,5 @@
   },
   "engines": {
     "node": ">=20"
-  },
-  "packageManager": "yarn@4.4.0"
+  }
 }

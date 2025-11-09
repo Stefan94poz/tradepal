@@ -1,7 +1,11 @@
 #!/bin/sh
 
-# Run database migrations
-yarn medusa db:migrate
+# Run migrations and start server
+echo "Running database migrations..."
+npx medusa db:migrate
 
-# Start the development server
+echo "Seeding database..."
+yarn seed || echo "Seeding failed, continuing..."
+
+echo "Starting Medusa development server..."
 yarn dev

@@ -1,8 +1,8 @@
 .PHONY: help up down restart logs build clean api-shell api-logs db-shell db-migrate db-reset redis-cli
 
 # Variables
-DOCKER_DIR := apps/api/docker
-COMPOSE_FILE := $(DOCKER_DIR)/docker-compose.yml
+API_DIR := apps/api
+DOCKER_DIR := $(API_DIR)/docker
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
