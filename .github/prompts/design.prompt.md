@@ -1,3 +1,7 @@
+---
+mode: agent
+---
+
 # Design Document
 
 ## Overview
@@ -737,32 +741,27 @@ interface ErrorResponse {
 ### Error Categories
 
 1. **Authentication Errors (401)**
-
    - INVALID_CREDENTIALS
    - TOKEN_EXPIRED
    - TOKEN_INVALID
    - UNAUTHORIZED_ACCESS
 
 2. **Authorization Errors (403)**
-
    - INSUFFICIENT_PERMISSIONS
    - SUBSCRIPTION_REQUIRED
    - ACCOUNT_TYPE_MISMATCH
 
 3. **Validation Errors (400)**
-
    - INVALID_INPUT
    - MISSING_REQUIRED_FIELD
    - INVALID_FORMAT
 
 4. **Resource Errors (404)**
-
    - USER_NOT_FOUND
    - PRODUCT_NOT_FOUND
    - PITCH_NOT_FOUND
 
 5. **Business Logic Errors (422)**
-
    - PITCH_ALREADY_CLOSED
    - INSUFFICIENT_TRADE_LIMIT
    - DUPLICATE_PROPOSAL

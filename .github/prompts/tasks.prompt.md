@@ -1,7 +1,10 @@
+---
+mode: agent
+---
+
 # Implementation Plan
 
 - [ ] 1. Set up project structure and development environment
-
   - Initialize monorepo structure with separate storefront (Next.js) and backend (MedusaJS) directories
   - Create MedusaJS backend using `npx create-medusa-app@latest` with PostgreSQL and Redis
   - Create Next.js frontend using `npx create-next-app@latest` with TypeScript and App Router
@@ -13,7 +16,6 @@
   - _Requirements: All requirements depend on proper project setup_
 
 - [ ] 2. Extend MedusaJS database schema with custom entities
-
   - Create MedusaJS migration to extend Customer entity with account_type and company_name fields
   - Create custom UserProfile entity migration with business info and ranking score
   - Create custom Pitch entity migration with buyer, seller, product relationships
@@ -26,9 +28,7 @@
   - _Requirements: 1.2, 2.4, 3.4, 6.5, 7.5, 9.5, 10.4_
 
 - [ ] 3. Extend MedusaJS authentication for B2B marketplace
-
   - [ ] 3.1 Create custom registration endpoint extending MedusaJS customer creation
-
     - Create POST /store/auth/register API route in MedusaJS
     - Extend CustomerService to accept account_type and company_name fields
     - Validate email format and password strength using Zod schemas
@@ -37,7 +37,6 @@
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
   - [ ] 3.2 Extend MedusaJS login endpoint
-
     - Use MedusaJS built-in POST /store/auth endpoint for authentication
     - Verify credentials using MedusaJS AuthService (handles bcrypt and JWT)
     - Ensure authentication cookie is set with proper expiry
@@ -45,7 +44,6 @@
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
   - [ ] 3.3 Create authentication middleware for custom routes
-
     - Implement middleware using MedusaJS authenticate() helper
     - Extract customer information from JWT token (MedusaJS managed)
     - Add account type validation for Buyer/Seller-specific routes
@@ -53,7 +51,6 @@
     - _Requirements: 4.2, 4.5_
 
   - [ ] 3.4 Configure session management
-
     - Configure MedusaJS session settings in medusa-config.js
     - Set JWT expiry and refresh token settings
     - Configure Redis for session storage
@@ -66,9 +63,7 @@
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
 - [ ] 4. Create custom UserProfile module in MedusaJS
-
   - [ ] 4.1 Create UserProfileService for profile management
-
     - Create custom MedusaJS service extending TransactionBaseService
     - Implement createProfile method for both Buyers and Sellers
     - Validate required fields using Zod schemas
@@ -77,7 +72,6 @@
     - _Requirements: 2.1, 2.4, 3.1, 3.4_
 
   - [ ] 4.2 Create profile API endpoints
-
     - Create POST /store/profiles API route for profile creation
     - Create PATCH /store/profiles/:id API route for profile updates
     - Create GET /store/profiles/me API route for authenticated user's profile
@@ -86,14 +80,12 @@
     - _Requirements: 2.2, 2.3, 3.3_
 
   - [ ] 4.3 Implement profile authorization logic
-
     - Validate that authenticated customer can only update their own profile
     - Filter sensitive information for public profile views
     - Return appropriate error responses for unauthorized access
     - _Requirements: 2.2, 2.3_
 
   - [ ] 4.4 Implement data pseudonymization utility
-
     - Create utility function to generate pseudonymous identifiers
     - Create custom entity for pseudonym mappings
     - Implement function to replace customer IDs with pseudonyms in logs
@@ -107,9 +99,7 @@
     - _Requirements: 2.1, 2.2, 3.1, 5.1, 5.2_
 
 - [ ] 5. Extend MedusaJS Product module for B2B marketplace
-
   - [ ] 5.1 Create ExtendedProductService
-
     - Extend MedusaJS ProductService to add seller_id and specifications fields
     - Override create method to validate Seller account type
     - Store seller_id with product for ownership tracking
@@ -118,7 +108,6 @@
     - _Requirements: 3.2_
 
   - [ ] 5.2 Create custom product API endpoints
-
     - Create POST /store/products API route for Sellers to create products
     - Create PATCH /store/products/:id API route for product updates
     - Create DELETE /store/products/:id API route for product deletion
@@ -126,7 +115,6 @@
     - _Requirements: 3.2_
 
   - [ ] 5.3 Implement product retrieval endpoints
-
     - Use MedusaJS built-in GET /store/products/:id for product details
     - Create GET /store/sellers/:sellerId/products API route for Seller's product list
     - Implement pagination using MedusaJS pagination utilities
@@ -134,7 +122,6 @@
     - _Requirements: 3.3_
 
   - [ ] 5.4 Configure product image uploads
-
     - Use MedusaJS file service for image uploads (supports S3, MinIO, local)
     - Configure file upload plugin in medusa-config.js
     - Create POST /store/products/:id/images API route
@@ -149,9 +136,7 @@
     - _Requirements: 3.2, 3.3_
 
 - [ ] 6. Create custom Pitch module in MedusaJS
-
   - [ ] 6.1 Create PitchService and related entities
-
     - Create custom Pitch entity with buyer_id, seller_id, product_id, and status
     - Create PitchMessage entity for negotiation messages
     - Create Proposal entity for price proposals
@@ -160,7 +145,6 @@
     - _Requirements: 6.1_
 
   - [ ] 6.2 Create pitch creation API endpoint
-
     - Create POST /store/pitches API route for Buyers
     - Accept seller_id, product_id, initial_message, requested_quantity, target_price
     - Validate authenticated customer is a Buyer
@@ -169,7 +153,6 @@
     - _Requirements: 6.1_
 
   - [ ] 6.3 Implement pitch messaging functionality
-
     - Create POST /store/pitches/:id/messages API route
     - Validate sender is either Buyer or Seller in the pitch
     - Store message with sender customer_id and timestamp
@@ -178,7 +161,6 @@
     - _Requirements: 6.2, 6.3_
 
   - [ ] 6.4 Implement proposal submission
-
     - Create POST /store/pitches/:id/proposals API route
     - Accept proposed_by, price_amount, price_currency, quantity, terms
     - Validate proposer is involved in the pitch
@@ -187,7 +169,6 @@
     - _Requirements: 6.2, 6.3_
 
   - [ ] 6.5 Implement pitch closure workflow
-
     - Create POST /store/pitches/:id/close API route
     - Accept agreed_terms with price, quantity, delivery_terms, payment_terms
     - Update pitch status to 'CLOSED' and set closed_at timestamp
@@ -196,7 +177,6 @@
     - _Requirements: 6.4, 6.5, 7.1, 7.5_
 
   - [ ] 6.6 Create pitch retrieval endpoints
-
     - Create GET /store/pitches/:id API route with full details
     - Create GET /store/pitches/buyer API route for authenticated Buyer's pitches
     - Create GET /store/pitches/seller API route for authenticated Seller's pitches
@@ -210,16 +190,13 @@
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
 - [ ] 7. Create SupplierRelationship module in MedusaJS
-
   - [ ] 7.1 Create SupplierRelationship entity and service
-
     - Create SupplierRelationship entity (created in pitch closure)
     - Create SupplierRelationshipService extending TransactionBaseService
     - Implement methods to retrieve relationships for Buyers
     - _Requirements: 7.1, 7.5_
 
   - [ ] 7.2 Create supplier relationship API endpoints
-
     - Create GET /store/supplier-relationships/buyer API route for Buyer's suppliers
     - Create GET /store/supplier-relationships/:id API route for detailed view
     - Include seller profile, agreed terms, and transaction history
@@ -233,16 +210,13 @@
     - _Requirements: 7.2, 7.3, 7.4_
 
 - [ ] 8. Implement search functionality using MedusaJS
-
   - [ ] 8.1 Configure MedusaJS search plugin
-
     - Install and configure search plugin (Algolia, Meilisearch, or PostgreSQL full-text)
     - Configure search indexing for products and user profiles
     - Set up search index mappings for custom fields
     - _Requirements: 8.1, 8.2_
 
   - [ ] 8.2 Create product search endpoint
-
     - Create GET /store/search/products API route
     - Accept query text, filters (category, price_range, location), and pagination
     - Use MedusaJS SearchService for full-text search on title and description
@@ -250,7 +224,6 @@
     - _Requirements: 8.1, 8.2, 8.4, 8.5_
 
   - [ ] 8.3 Create supplier search endpoint
-
     - Create GET /store/search/suppliers API route
     - Search across UserProfile fields (company_name, description, industry_sector)
     - Apply filters for location and minimum ranking_score
@@ -258,7 +231,6 @@
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
   - [ ] 8.4 Implement search result caching
-
     - Use MedusaJS CacheService with Redis backend
     - Cache search results with 5-minute TTL
     - Generate cache keys from query parameters
@@ -266,7 +238,6 @@
     - _Requirements: 8.2_
 
   - [ ] 8.5 Implement search facets and aggregations
-
     - Calculate facet counts for categories, locations, and price ranges
     - Use database aggregation queries or search plugin faceting
     - Return facets alongside search results for filter refinement
@@ -279,16 +250,13 @@
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
 - [ ] 9. Create custom Subscription module in MedusaJS
-
   - [ ] 9.1 Create SubscriptionPlan and Subscription entities
-
     - Create SubscriptionPlan entity with name, price, currency, billing_period, features, trade_limit
     - Create Subscription entity with customer_id, plan_id, status, dates, trade_count
     - Create SubscriptionService extending TransactionBaseService
     - _Requirements: 9.3_
 
   - [ ] 9.2 Seed subscription plans
-
     - Create database seed script for subscription plans
     - Insert Basic plan ($150/month) and Standard plan ($300/month)
     - Define features and trade limits for each plan
@@ -296,7 +264,6 @@
     - _Requirements: 9.3_
 
   - [ ] 9.3 Create subscription API endpoints
-
     - Create GET /store/subscription-plans API route to list available plans
     - Create POST /store/subscriptions API route for plan activation
     - Create GET /store/subscriptions/me API route for active subscription
@@ -304,7 +271,6 @@
     - _Requirements: 9.1, 9.2, 9.4_
 
   - [ ] 9.4 Implement subscription access middleware
-
     - Create middleware to check active subscription before pitch creation
     - Query Subscription entity for authenticated customer
     - Validate subscription status is 'ACTIVE' and not expired
@@ -312,7 +278,6 @@
     - _Requirements: 9.2_
 
   - [ ] 9.5 Implement trade count tracking
-
     - Add method to SubscriptionService to increment trade_count
     - Call increment method in pitch closure workflow
     - Check trade_count against plan limits for tier upgrade eligibility
@@ -326,16 +291,13 @@
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
 - [ ] 10. Create Transaction module for fee tracking
-
   - [ ] 10.1 Create Transaction entity and service
-
     - Create Transaction entity with buyer_id, seller_id, pitch_id, amount, currency, transaction_fee, status
     - Create TransactionService extending TransactionBaseService
     - Implement calculateTransactionFee utility (3.5% of amount, rounded to 2 decimals)
     - _Requirements: 10.1, 10.2_
 
   - [ ] 10.2 Integrate transaction recording in pitch closure
-
     - Add transaction creation to pitch closure workflow
     - Calculate transaction fee using utility function
     - Create Transaction record with status 'COMPLETED'
@@ -343,7 +305,6 @@
     - _Requirements: 10.1, 10.2, 10.4_
 
   - [ ] 10.3 Create transaction history endpoints
-
     - Create GET /store/transactions/buyer API route for Buyer's transactions
     - Create GET /store/transactions/seller API route for Seller's transactions
     - Include transaction fee, pitch details, and other party information
@@ -357,9 +318,7 @@
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
 - [ ] 11. Set up Next.js frontend foundation with Tailwind and shadcn/ui
-
   - [ ] 11.1 Configure Next.js App Router structure
-
     - Set up app directory with layout.tsx and page.tsx
     - Configure Next.js middleware for authentication checks
     - Set up route groups for authenticated and public routes
@@ -367,7 +326,6 @@
     - _Requirements: All UI-related requirements_
 
   - [ ] 11.2 Create API client for MedusaJS integration
-
     - Create lib/medusa-client.ts using @medusajs/medusa-js SDK
     - Configure base URL and credentials handling
     - Create API wrapper functions for custom endpoints
@@ -375,7 +333,6 @@
     - _Requirements: 4.1, 4.2, 4.5_
 
   - [ ] 11.3 Set up authentication context with Next.js
-
     - Create AuthContext using React Context API
     - Implement useAuth hook for accessing customer state
     - Store authentication state in cookies (httpOnly for security)
@@ -384,7 +341,6 @@
     - _Requirements: 4.1, 4.2, 4.5_
 
   - [ ] 11.4 Install and configure shadcn/ui components
-
     - Run `npx shadcn-ui@latest init` with Tailwind configuration
     - Install core shadcn/ui components: Button, Input, Card, Form, Dialog, Select, Tabs
     - Install additional components: Badge, Avatar, Dropdown Menu, Pagination, Toast
@@ -401,9 +357,7 @@
     - _Requirements: All UI-related requirements_
 
 - [ ] 12. Build authentication pages with Next.js and shadcn/ui
-
   - [ ] 12.1 Create registration page
-
     - Create app/(auth)/register/page.tsx with Next.js App Router
     - Build registration form using shadcn/ui Form and Input components
     - Add account type selection (Buyer/Seller) using shadcn/ui Select
@@ -414,7 +368,6 @@
     - _Requirements: 1.1, 1.2, 1.4_
 
   - [ ] 12.2 Create login page
-
     - Create app/(auth)/login/page.tsx with form layout
     - Build login form using shadcn/ui Form components
     - Validate email and password fields with Zod
@@ -432,9 +385,7 @@
     - _Requirements: 4.2, 4.5_
 
 - [ ] 13. Create user profile pages with Next.js
-
   - [ ] 13.1 Build Buyer profile page
-
     - Create app/(dashboard)/profile/page.tsx for Buyers
     - Build profile form using shadcn/ui Form, Input, and Textarea components
     - Add fields for company info, business type, location, contact details
@@ -445,7 +396,6 @@
     - _Requirements: 2.1, 2.2, 2.4, 2.5_
 
   - [ ] 13.2 Build Seller profile page
-
     - Create Seller-specific profile page with ranking score display
     - Add shadcn/ui Badge component to show ranking prominently
     - Include product catalog section with link to products page
@@ -463,9 +413,7 @@
     - _Requirements: 2.3, 3.3_
 
 - [ ] 14. Build product management UI with Next.js
-
   - [ ] 14.1 Create product listing page for Sellers
-
     - Create app/(dashboard)/products/page.tsx for Sellers
     - Fetch products using Next.js Server Components or TanStack Query
     - Display product grid using shadcn/ui Card components
@@ -475,7 +423,6 @@
     - _Requirements: 3.2, 3.3_
 
   - [ ] 14.2 Create product creation and edit form
-
     - Create app/(dashboard)/products/new/page.tsx and edit/[id]/page.tsx
     - Build comprehensive form with shadcn/ui Form components
     - Add fields for title, description, specifications (JSON), price, category
@@ -497,9 +444,7 @@
     - _Requirements: 3.3, 6.1_
 
 - [ ] 15. Implement search and discovery UI with Next.js
-
   - [ ] 15.1 Create search page with filters
-
     - Create app/search/page.tsx with search interface
     - Build search input using shadcn/ui Input with search icon
     - Create filter sidebar with shadcn/ui Select, Slider, and Checkbox components
@@ -510,7 +455,6 @@
     - _Requirements: 8.1, 8.3, 8.4, 8.5_
 
   - [ ] 15.2 Build search results display
-
     - Create result cards using shadcn/ui Card components
     - Display product/supplier info with images, price, location, ranking
     - Implement grid/list view toggle using shadcn/ui Tabs
@@ -529,9 +473,7 @@
     - _Requirements: 8.3, 8.4_
 
 - [ ] 16. Create pitch management UI with Next.js
-
   - [ ] 16.1 Build pitch creation dialog
-
     - Create pitch creation modal using shadcn/ui Dialog component
     - Trigger dialog from product detail page
     - Build form with fields for quantity, target price, initial message
@@ -542,7 +484,6 @@
     - _Requirements: 6.1_
 
   - [ ] 16.2 Create pitch detail page with messaging
-
     - Create app/(dashboard)/pitches/[id]/page.tsx
     - Display pitch header with product, parties, status using shadcn/ui Card
     - Build message thread with scrollable container
@@ -553,7 +494,6 @@
     - _Requirements: 6.2, 6.3, 6.5_
 
   - [ ] 16.3 Implement proposal submission interface
-
     - Add proposal form within pitch detail page using shadcn/ui Dialog
     - Include fields for price, quantity, terms using shadcn/ui Form components
     - Display proposal history in timeline format with shadcn/ui Card
@@ -563,7 +503,6 @@
     - _Requirements: 6.2, 6.3_
 
   - [ ] 16.4 Create pitch closure interface
-
     - Add "Close Pitch" button using shadcn/ui Button (primary variant)
     - Build confirmation dialog using shadcn/ui Dialog
     - Display agreed terms summary in dialog
@@ -585,9 +524,7 @@
     - _Requirements: 6.5_
 
 - [ ] 17. Build supplier relationship UI with Next.js
-
   - [ ] 17.1 Create supplier list page for Buyers
-
     - Create app/(dashboard)/suppliers/page.tsx
     - Display supplier cards using shadcn/ui Card components
     - Show company name, contact info, relationship date
@@ -608,9 +545,7 @@
     - _Requirements: 7.3, 7.5_
 
 - [ ] 18. Implement subscription management UI with Next.js
-
   - [ ] 18.1 Create subscription plan selection page
-
     - Create app/(dashboard)/subscription/page.tsx
     - Display plan cards using shadcn/ui Card components
     - Highlight plan differences with shadcn/ui Badge
@@ -621,7 +556,6 @@
     - _Requirements: 9.1, 9.3_
 
   - [ ] 18.2 Build subscription activation flow
-
     - Create confirmation dialog using shadcn/ui Dialog
     - Display plan details and pricing summary
     - Add payment information section (placeholder for MVP)
@@ -641,9 +575,7 @@
     - _Requirements: 9.5_
 
 - [ ] 19. Add error handling and loading states to Next.js app
-
   - [ ] 19.1 Create error boundary and error pages
-
     - Create app/error.tsx for error boundary
     - Create app/not-found.tsx for 404 pages
     - Display user-friendly error messages with shadcn/ui Alert
@@ -652,7 +584,6 @@
     - _Requirements: All requirements_
 
   - [ ] 19.2 Implement loading states throughout app
-
     - Create loading.tsx files for route segments
     - Build skeleton components using Tailwind animate-pulse
     - Show loading spinners using shadcn/ui custom spinner or Lucide icons
@@ -670,9 +601,7 @@
     - _Requirements: All requirements_
 
 - [ ] 20. Implement API documentation and backend error handling
-
   - [ ] 20.1 Create OpenAPI documentation for MedusaJS
-
     - Install and configure Swagger plugin for MedusaJS
     - Document all custom API endpoints with request/response schemas
     - Include authentication requirements and error responses
@@ -681,7 +610,6 @@
     - _Requirements: All requirements_
 
   - [ ] 20.2 Implement centralized error handling in MedusaJS
-
     - Create custom error classes extending MedusaError
     - Implement error handler middleware for custom routes
     - Return consistent error response format
@@ -698,9 +626,7 @@
     - _Requirements: All requirements_
 
 - [ ] 21. Implement security measures in MedusaJS
-
   - [ ] 21.1 Configure rate limiting
-
     - Install and configure rate limiting middleware
     - Set limit to 100 requests per minute per IP
     - Apply to all custom API endpoints
@@ -709,7 +635,6 @@
     - _Requirements: 4.1, 4.2_
 
   - [ ] 21.2 Configure CORS and security headers
-
     - Configure CORS in medusa-config.js with allowed origins
     - Add security headers using helmet middleware
     - Configure Content Security Policy for Next.js frontend
@@ -726,9 +651,7 @@
     - _Requirements: All requirements_
 
 - [ ] 22. Set up logging and monitoring for MedusaJS
-
   - [ ] 22.1 Configure application logging
-
     - Use MedusaJS built-in logger (Winston-based)
     - Configure log levels for different environments
     - Log all API requests and responses
@@ -746,9 +669,7 @@
     - _Requirements: 5.1, 5.2, 5.3_
 
 - [ ] 23. Create deployment configuration
-
   - [ ] 23.1 Create Dockerfile for MedusaJS backend
-
     - Create multi-stage Dockerfile for Node.js backend
     - Optimize image size using alpine base image
     - Configure environment variables
@@ -757,7 +678,6 @@
     - _Requirements: All requirements_
 
   - [ ] 23.2 Create Dockerfile for Next.js frontend
-
     - Create Dockerfile for Next.js with standalone output
     - Build production-optimized bundle
     - Configure environment variables for runtime

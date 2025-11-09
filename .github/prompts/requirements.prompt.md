@@ -1,3 +1,7 @@
+---
+mode: agent
+---
+
 # Requirements Document
 
 ## Introduction

@@ -1,3 +1,7 @@
 {
-  "context": ["prompts/requirements.md", "prompts/design.md", "prompts/tasks.md"]
+  "context": [
+    ".github/prompts/requirements.prompt.md",
+    ".github/prompts/design.prompt.md",
+    ".github/prompts/tasks.prompt.md"
+  ]
 }
