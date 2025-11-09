@@ -2,7 +2,7 @@
 
 # Variables
 DOCKER_DIR := apps/api/docker
-COMPOSE_FILE := $(DOCKER_DIR)/compose.yml
+COMPOSE_FILE := $(DOCKER_DIR)/docker-compose.yml
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -41,16 +41,16 @@ clean: ## Stop containers and remove volumes
 
 # Service-specific commands
 api-shell: ## Open a shell in the Medusa container
-	docker exec -it tradepal_medusa_backend sh
+	docker exec -it tradepal_medusa sh
 
 api-logs: ## Show Medusa API logs
-	docker logs -f tradepal_medusa_backend
+	docker logs -f tradepal_medusa
 
 db-shell: ## Open PostgreSQL shell
-	docker exec -it tradepal_medusa_postgres psql -U postgres -d tradepal-medusa
+	docker exec -it tradepal_postgres psql -U postgres -d tradepal_medusa
 
 db-migrate: ## Run database migrations
-	docker exec -it tradepal_medusa_backend yarn medusa db:migrate
+	docker exec -it tradepal_medusa yarn medusa db:migrate
 
 db-reset: ## Reset database (Warning: destroys data!)
 	@echo "⚠️  This will destroy all data! Press Ctrl+C to cancel..."
@@ -62,7 +62,7 @@ db-reset: ## Reset database (Warning: destroys data!)
 	cd $(DOCKER_DIR) && docker compose up -d medusa
 
 redis-cli: ## Open Redis CLI
-	docker exec -it tradepal_medusa_redis redis-cli
+	docker exec -it tradepal_redis redis-cli
 
 # Development commands
 dev: ## Start development environment

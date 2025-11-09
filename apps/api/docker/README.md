@@ -1,133 +1,71 @@
-# Docker Setup for TradePal
-
-This directory contains the Docker configuration for the TradePal Medusa backend.
-
-## Services
-
-- **PostgreSQL** (port 5432): Database for Medusa
-- **Redis** (port 6379): Cache and session store
-- **Medusa** (port 9000): Backend API and Admin Dashboard
+# TradePal Docker Setup
 
 ## Quick Start
 
-From the **root of the monorepo**, you can use either Makefile commands or npm scripts:
-
-### Using Makefile (Recommended)
-
 ```bash
 # Start all services
-make docker-up
-
-# Stop all services
-make docker-down
+make up
 
 # View logs
-make docker-logs
-
-# See all available commands
-make help
-```
-
-### Using NPM Scripts
-
-```bash
-# Start all services
-yarn docker:up
+make logs
 
 # Stop all services
-yarn docker:down
+make down
 
-# View logs
-yarn docker:logs
-
-# View container status
-yarn docker:status
+# Restart services
+make restart
 ```
 
-## Available Makefile Commands
+## Services
 
-| Command | Description |
-|---------|-------------|
-| `make docker-up` | Start all Docker containers |
-| `make docker-down` | Stop all Docker containers |
-| `make docker-restart` | Restart all Docker containers |
-| `make docker-logs` | Show logs from all containers |
-| `make docker-build` | Build Docker images |
-| `make docker-clean` | Stop containers and remove volumes |
-| `make api-shell` | Open a shell in the Medusa container |
-| `make api-logs` | Show Medusa API logs |
-| `make db-shell` | Open PostgreSQL shell |
-| `make db-migrate` | Run database migrations |
-| `make db-reset` | Reset database (destroys data!) |
-| `make redis-cli` | Open Redis CLI |
-| `make dev` | Start development environment |
-| `make status` | Show status of all containers |
+- **PostgreSQL** (port 5432) - Main database
+- **Redis** (port 6379) - Cache and session storage
+- **MinIO** (ports 9001, 9002) - S3-compatible file storage
+- **MeiliSearch** (port 7700) - Search engine
+- **Medusa** (port 9000) - Backend API and Admin dashboard
 
 ## Environment Variables
 
-Make sure you have a `.env` file in `apps/api/` with the required environment variables. See `.env.template` for reference.
+All environment variables are defined in `docker-compose.yml` for development.
 
-## Accessing Services
+For production, create a `.env` file in the api directory.
 
-- **Medusa API**: http://localhost:9000
-- **Medusa Admin**: http://localhost:9000/app
-- **PostgreSQL**: localhost:5432
-- **Redis**: localhost:6379
+## Database Migrations
+
+Migrations run automatically when the Medusa container starts.
+
+To run migrations manually:
+```bash
+docker exec tradepal_medusa yarn medusa db:migrate
+```
+
+## Creating Admin User
+
+```bash
+docker exec -it tradepal_medusa yarn medusa user -e admin@tradepal.com -p admin123
+```
 
 ## Troubleshooting
 
-### Containers won't start
+### Container won't start
 ```bash
-# Clean up and restart
-make docker-clean
-make docker-build
-make docker-up
+# Check logs
+docker logs tradepal_medusa
+
+# Restart specific service
+docker restart tradepal_medusa
 ```
 
-### Database connection issues
+### Database issues
 ```bash
-# Check if PostgreSQL is running
-make status
-
-# View database logs
-docker logs tradepal_medusa_postgres
+# Reset database (WARNING: deletes all data)
+docker volume rm tradepal_postgres_data
+make up
 ```
 
-### View Medusa logs
+### Module resolution errors
+The Dockerfile uses volume mounts to preserve node_modules across rebuilds.
+If you encounter issues, rebuild without cache:
 ```bash
-make api-logs
+docker compose build --no-cache
 ```
-
-## Development Workflow
-
-1. Start the containers:
-   ```bash
-   make docker-up
-   ```
-
-2. Run migrations:
-   ```bash
-   make db-migrate
-   ```
-
-3. Access the Medusa admin at http://localhost:9000/app
-
-4. View logs if needed:
-   ```bash
-   make docker-logs
-   ```
-
-5. When done:
-   ```bash
-   make docker-down
-   ```
-
-## Volume Mounts
-
-The Medusa service uses a volume mount to enable hot-reloading during development:
-- Your local `apps/api` directory is mounted to `/server` in the container
-- Changes to your code will be reflected immediately
-
-## Data Persistence
-
-PostgreSQL data is persisted in a Docker volume named `postgres_data_tradepal`. This data will survive container restarts but will be removed if you run `make docker-clean`.
