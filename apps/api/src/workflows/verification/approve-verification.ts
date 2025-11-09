@@ -57,14 +57,16 @@ const approveVerificationStep = createStep(
     }
 
     // Send notification
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     await notificationService.createNotification({
       user_id: verificationRecord.user_id,
       type: "verification_approved",
       title: "Profile Verified",
-      message: "Your profile has been successfully verified. You can now access all platform features.",
+      message:
+        "Your profile has been successfully verified. You can now access all platform features.",
       send_email: true,
     });
 

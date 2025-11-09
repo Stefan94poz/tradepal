@@ -13,7 +13,9 @@ type NotificationData = {
 class NotificationModuleService extends MedusaService({
   Notification,
 }) {
-  async createNotification(data: NotificationData): Promise<typeof Notification> {
+  async createNotification(
+    data: NotificationData
+  ): Promise<typeof Notification> {
     const notification = await this.createNotifications(data);
 
     // Send email if requested
@@ -24,14 +26,19 @@ class NotificationModuleService extends MedusaService({
     return notification;
   }
 
-  async getUnreadNotifications(userId: string): Promise<typeof Notification[]> {
-    return await this.listNotifications({
-      user_id: userId,
-      read: false,
-    }, {
-      order: { created_at: "DESC" },
-      take: 50,
-    });
+  async getUnreadNotifications(
+    userId: string
+  ): Promise<(typeof Notification)[]> {
+    return await this.listNotifications(
+      {
+        user_id: userId,
+        read: false,
+      },
+      {
+        order: { created_at: "DESC" },
+        take: 50,
+      }
+    );
   }
 
   async markAsRead(notificationId: string): Promise<typeof Notification> {
@@ -55,7 +62,7 @@ class NotificationModuleService extends MedusaService({
   async sendEmail(notification: typeof Notification): Promise<void> {
     // Get email template based on notification type
     const template = this.getEmailTemplate(notification.type);
-    
+
     // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
     // For now, just log the email that would be sent
     console.log(`[EMAIL] To: ${notification.user_id}`);
@@ -72,10 +79,14 @@ class NotificationModuleService extends MedusaService({
     subject: string;
     body: (notification: typeof Notification) => string;
   } {
-    const templates: Record<string, { subject: string; body: (n: typeof Notification) => string }> = {
+    const templates: Record<
+      string,
+      { subject: string; body: (n: typeof Notification) => string }
+    > = {
       verification_approved: {
         subject: "✅ Your profile has been verified",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Great news! Your profile has been successfully verified.
@@ -88,7 +99,8 @@ TradePal Team
       },
       verification_rejected: {
         subject: "❌ Profile verification requires attention",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 We were unable to verify your profile at this time.
@@ -103,7 +115,8 @@ TradePal Team
       },
       order_created: {
         subject: "🛒 New order received",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 You have received a new order #${n.data?.order_id}.
@@ -116,7 +129,8 @@ TradePal Team
       },
       order_accepted: {
         subject: "✅ Order accepted",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Your order #${n.data?.order_id} has been accepted by the seller.
@@ -129,7 +143,8 @@ TradePal Team
       },
       order_declined: {
         subject: "❌ Order declined",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Unfortunately, your order #${n.data?.order_id} has been declined by the seller.
@@ -144,7 +159,8 @@ TradePal Team
       },
       escrow_created: {
         subject: "🔒 Payment held in escrow",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Payment for order #${n.data?.order_id} has been securely held in escrow.
@@ -157,7 +173,8 @@ TradePal Team
       },
       escrow_released: {
         subject: "💰 Payment released",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Payment for order #${n.data?.order_id} has been released from escrow.
@@ -170,7 +187,8 @@ TradePal Team
       },
       escrow_disputed: {
         subject: "⚠️ Escrow dispute opened",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 A dispute has been opened for order #${n.data?.order_id}.
@@ -183,7 +201,8 @@ TradePal Team
       },
       shipment_created: {
         subject: "📦 Your order has shipped",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Your order #${n.data?.order_id} has been shipped!
@@ -199,7 +218,8 @@ TradePal Team
       },
       shipment_delivered: {
         subject: "✅ Order delivered",
-        body: (n) => `
+        body: (n) =>
+          `
 Hello,
 
 Your order #${n.data?.order_id} has been delivered!
@@ -212,10 +232,12 @@ TradePal Team
       },
     };
 
-    return templates[type] || {
-      subject: "Notification from TradePal",
-      body: (n) => n.message,
-    };
+    return (
+      templates[type] || {
+        subject: "Notification from TradePal",
+        body: (n) => n.message,
+      }
+    );
   }
 }
 

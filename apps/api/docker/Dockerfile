@@ -15,7 +15,7 @@ COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
 
 # Install dependencies
-RUN yarn install --immutable
+RUN yarn install
 
 # Final stage
 FROM base AS runner

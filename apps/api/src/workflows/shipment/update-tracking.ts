@@ -56,9 +56,10 @@ const updateTrackingStatusStep = createStep(
 
     // Send notification if delivered
     if (input.status === "delivered" && input.buyerId && input.orderId) {
-      const notificationService: NotificationModuleService =
-        container.resolve("notificationModuleService");
-      
+      const notificationService: NotificationModuleService = container.resolve(
+        "notificationModuleService"
+      );
+
       await notificationService.createNotification({
         user_id: input.buyerId,
         type: "shipment_delivered",

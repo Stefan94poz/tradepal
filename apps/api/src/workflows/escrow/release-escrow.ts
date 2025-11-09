@@ -72,7 +72,7 @@ const updateEscrowStatusStep = createStep(
   "update-escrow-status",
   async (input: { escrowId: string }, { container }) => {
     const escrowService: EscrowModuleService = container.resolve(ESCROW_MODULE);
-    
+
     const escrow = await escrowService.updateEscrowTransactions({
       selector: { id: input.escrowId },
       data: {
@@ -100,9 +100,10 @@ const updateEscrowStatusStep = createStep(
 const notifyPartiesStep = createStep(
   "notify-parties-escrow-released",
   async (input: { sellerId: string; orderId: string }, { container }) => {
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     // Notify seller
     await notificationService.createNotification({
       user_id: input.sellerId,
@@ -128,4 +129,3 @@ export const releaseEscrowWorkflow = createWorkflow(
     return new WorkflowResponse(escrow);
   }
 );
-

@@ -83,9 +83,10 @@ const createEscrowRecordStep = createStep(
     });
 
     // Send notification to buyer
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     await notificationService.createNotification({
       user_id: input.escrowData.buyerId,
       type: "escrow_created",

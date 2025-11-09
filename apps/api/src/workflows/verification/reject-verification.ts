@@ -57,9 +57,10 @@ const rejectVerificationStep = createStep(
     }
 
     // Send notification
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     await notificationService.createNotification({
       user_id: verificationRecord.user_id,
       type: "verification_rejected",

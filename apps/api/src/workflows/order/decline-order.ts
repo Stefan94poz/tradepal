@@ -52,10 +52,14 @@ const refundPaymentStep = createStep(
 
 const notifyBuyerDeclineStep = createStep(
   "notify-buyer-order-declined",
-  async (input: { orderId: string; buyerId: string; reason: string }, { container }) => {
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+  async (
+    input: { orderId: string; buyerId: string; reason: string },
+    { container }
+  ) => {
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     await notificationService.createNotification({
       user_id: input.buyerId,
       type: "order_declined",

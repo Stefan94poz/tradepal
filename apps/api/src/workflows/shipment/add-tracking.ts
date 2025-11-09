@@ -36,9 +36,10 @@ const addTrackingStep = createStep(
     });
 
     // Send notification to buyer
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     await notificationService.createNotification({
       user_id: input.buyerId,
       type: "shipment_created",

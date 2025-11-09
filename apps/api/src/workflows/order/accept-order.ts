@@ -44,9 +44,10 @@ const acceptOrderStep = createStep(
 const notifyBuyerStep = createStep(
   "notify-buyer-order-accepted",
   async (input: { orderId: string; buyerId: string }, { container }) => {
-    const notificationService: NotificationModuleService =
-      container.resolve("notificationModuleService");
-    
+    const notificationService: NotificationModuleService = container.resolve(
+      "notificationModuleService"
+    );
+
     await notificationService.createNotification({
       user_id: input.buyerId,
       type: "order_accepted",

@@ -1,6 +1,7 @@
 # Notification System Implementation Summary
 
 ## Overview
+
 Implemented a complete notification system for the TradePal B2B platform with email support and in-app notifications.
 
 ## Components Created
@@ -8,6 +9,7 @@ Implemented a complete notification system for the TradePal B2B platform with em
 ### 1. Notification Module (`src/modules/notification/`)
 
 **Model** (`models/notification.ts`):
+
 - `id` - Unique identifier
 - `user_id` - Recipient user
 - `type` - Notification type (10 types defined)
@@ -20,6 +22,7 @@ Implemented a complete notification system for the TradePal B2B platform with em
 - `read_at` - When marked as read
 
 **Service** (`service.ts`):
+
 - `createNotification()` - Create and optionally email notification
 - `getUnreadNotifications()` - Fetch unread for user
 - `markAsRead()` - Mark single notification as read
@@ -28,6 +31,7 @@ Implemented a complete notification system for the TradePal B2B platform with em
 - `getEmailTemplate()` - Get template by notification type
 
 **Email Templates** (10 types):
+
 1. `verification_approved` - "✅ Your profile has been verified"
 2. `verification_rejected` - "❌ Profile verification requires attention"
 3. `order_created` - "🛒 New order received"
@@ -47,6 +51,7 @@ Implemented a complete notification system for the TradePal B2B platform with em
 - `POST /store/notifications/read-all` - Mark all as read
 
 All endpoints:
+
 - Require authentication
 - Check user ownership
 - Support pagination
@@ -56,24 +61,29 @@ All endpoints:
 Updated 8 workflows to send notifications:
 
 **Verification Workflows**:
+
 - `approve-verification.ts` - Sends "verification_approved" email
 - `reject-verification.ts` - Sends "verification_rejected" email with reason
 
 **Order Workflows**:
+
 - `accept-order.ts` - Notifies buyer when seller accepts
 - `decline-order.ts` - Notifies buyer with decline reason
 
 **Escrow Workflows**:
+
 - `create-escrow.ts` - Notifies buyer when payment is held
 - `release-escrow.ts` - Notifies seller when payment is released
 
 **Shipment Workflows**:
+
 - `add-tracking.ts` - Notifies buyer when order ships
 - `update-tracking.ts` - Notifies buyer when delivered
 
 ## Configuration
 
 Added to `medusa-config.ts`:
+
 ```typescript
 {
   resolve: "./src/modules/notification",
@@ -84,7 +94,8 @@ Added to `medusa-config.ts`:
 
 **Current State**: Logging to console (development)
 
-**Production Ready**: 
+**Production Ready**:
+
 ```typescript
 // Replace console.log with actual email service:
 - SendGrid
@@ -104,46 +115,53 @@ await sgMail.send({
 
 ## Notification Types & Triggers
 
-| Type | Trigger | Recipients | Email |
-|------|---------|-----------|-------|
-| verification_approved | Admin approves verification | Applicant | ✅ |
-| verification_rejected | Admin rejects verification | Applicant | ✅ |
-| order_created | New order placed | Seller | ✅ |
-| order_accepted | Seller accepts order | Buyer | ✅ |
-| order_declined | Seller declines order | Buyer | ✅ |
-| escrow_created | Payment held | Buyer | ✅ |
-| escrow_released | Payment captured | Seller | ✅ |
-| escrow_disputed | Dispute opened | Both | ✅ |
-| shipment_created | Tracking added | Buyer | ✅ |
-| shipment_delivered | Delivery confirmed | Buyer | ✅ |
+| Type                  | Trigger                     | Recipients | Email |
+| --------------------- | --------------------------- | ---------- | ----- |
+| verification_approved | Admin approves verification | Applicant  | ✅    |
+| verification_rejected | Admin rejects verification  | Applicant  | ✅    |
+| order_created         | New order placed            | Seller     | ✅    |
+| order_accepted        | Seller accepts order        | Buyer      | ✅    |
+| order_declined        | Seller declines order       | Buyer      | ✅    |
+| escrow_created        | Payment held                | Buyer      | ✅    |
+| escrow_released       | Payment captured            | Seller     | ✅    |
+| escrow_disputed       | Dispute opened              | Both       | ✅    |
+| shipment_created      | Tracking added              | Buyer      | ✅    |
+| shipment_delivered    | Delivery confirmed          | Buyer      | ✅    |
 
 ## Frontend Integration Guide
 
 ### 1. Fetch Unread Count
+
 ```typescript
-const { notifications, count } = await fetch('/store/notifications/unread')
-  .then(res => res.json());
+const { notifications, count } = await fetch(
+  "/store/notifications/unread"
+).then((res) => res.json());
 ```
 
 ### 2. Display Notification Bell
+
 ```tsx
 <NotificationBell count={count} />
 ```
 
 ### 3. List Notifications
+
 ```typescript
-const { notifications } = await fetch('/store/notifications?take=50&skip=0')
-  .then(res => res.json());
+const { notifications } = await fetch(
+  "/store/notifications?take=50&skip=0"
+).then((res) => res.json());
 ```
 
 ### 4. Mark as Read
+
 ```typescript
-await fetch(`/store/notifications/${id}/read`, { method: 'POST' });
+await fetch(`/store/notifications/${id}/read`, { method: "POST" });
 ```
 
 ### 5. Mark All as Read
+
 ```typescript
-await fetch('/store/notifications/read-all', { method: 'POST' });
+await fetch("/store/notifications/read-all", { method: "POST" });
 ```
 
 ## Database Schema
@@ -172,6 +190,7 @@ CREATE INDEX idx_notification_created_at ON notification(created_at DESC);
 ## Testing
 
 ### Manual Test - Create Notification
+
 ```bash
 curl -X POST http://localhost:9000/admin/verifications/123/approve \
   -H "Authorization: Bearer <token>"
@@ -182,6 +201,7 @@ curl -X POST http://localhost:9000/admin/verifications/123/approve \
 ```
 
 ### Check Unread Count
+
 ```bash
 curl http://localhost:9000/store/notifications/unread \
   -H "Authorization: Bearer <token>"
@@ -190,6 +210,7 @@ curl http://localhost:9000/store/notifications/unread \
 ## Implementation Status
 
 ✅ **Completed** (Task 22.1):
+
 - [x] Notification module with data model
 - [x] Email template system (10 types)
 - [x] Service methods (CRUD + email)
@@ -199,6 +220,7 @@ curl http://localhost:9000/store/notifications/unread \
 - [x] Module registration in config
 
 ⏳ **Pending** (Task 22.2 - Frontend):
+
 - [ ] Notification bell icon with count
 - [ ] Notification dropdown
 - [ ] Notification list page
@@ -206,6 +228,7 @@ curl http://localhost:9000/store/notifications/unread \
 - [ ] Toast notifications for critical events
 
 ⚙️ **Production Requirements**:
+
 - [ ] Connect real email service (SendGrid/SES)
 - [ ] Add email rate limiting
 - [ ] Implement notification preferences (user settings)
