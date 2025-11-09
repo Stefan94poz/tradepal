@@ -10,11 +10,20 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Allow images and PDFs
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Invalid file type. Only JPEG, PNG, WEBP, and PDF are allowed."));
+      cb(
+        new Error(
+          "Invalid file type. Only JPEG, PNG, WEBP, and PDF are allowed."
+        )
+      );
     }
   },
 });

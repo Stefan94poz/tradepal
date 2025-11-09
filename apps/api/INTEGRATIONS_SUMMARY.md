@@ -9,23 +9,27 @@ This document summarizes the third-party service integrations implemented for Tr
 **Purpose**: Fast, typo-tolerant product search with B2B-specific filters
 
 **Files Created**:
+
 - `src/services/meilisearch.ts` - MeiliSearch service for indexing and searching
 - `src/subscribers/product-created.ts` - Auto-index new products
-- `src/subscribers/product-updated.ts` - Re-index updated products  
+- `src/subscribers/product-updated.ts` - Re-index updated products
 - `src/subscribers/product-deleted.ts` - Remove deleted products from index
 
 **Updated**:
+
 - `src/api/store/products/search/route.ts` - Now uses MeiliSearch for advanced filtering
 - `docker-compose.yml` - Added MeiliSearch service on port 7700
 - `.env` - Added MeiliSearch configuration
 
 **Features**:
+
 - Searchable: title, description, seller location, company name
 - Filterable: collection, price range, seller location, min order quantity, verified sellers
 - Sortable: created date, updated date, price
 - Automatic product indexing via event subscribers
 
 **Usage**:
+
 ```bash
 GET /store/products/search?q=laptop&seller_location=US&min_order_qty=10&is_verified=true
 ```
@@ -37,14 +41,17 @@ GET /store/products/search?q=laptop&seller_location=US&min_order_qty=10&is_verif
 **Purpose**: S3-compatible storage for product images and verification documents
 
 **Files Created**:
+
 - `src/services/minio.ts` - MinIO file service
 - `src/api/admin/uploads/route.ts` - File upload endpoints with multer
 
 **Updated**:
+
 - `docker-compose.yml` - Added MinIO service on ports 9000 (API) and 9001 (console)
 - `.env` - Added MinIO configuration
 
 **Features**:
+
 - Public URLs for product images
 - Presigned URLs for verification documents (1-hour expiry)
 - File upload with validation (JPEG, PNG, WEBP, PDF only)
@@ -52,6 +59,7 @@ GET /store/products/search?q=laptop&seller_location=US&min_order_qty=10&is_verif
 - Automatic bucket creation with policies
 
 **Usage**:
+
 ```bash
 # Upload files
 POST /admin/uploads
@@ -71,14 +79,17 @@ GET /admin/uploads/:fileName
 **Purpose**: Event tracking, user analytics, and A/B testing
 
 **Files Created**:
+
 - `src/services/analytics.ts` - PostHog service wrapper
 - `src/subscribers/analytics-order-placed.ts` - Track order events
 - `src/subscribers/analytics-product-search.ts` - Track search queries
 
 **Updated**:
+
 - `.env` - Added PostHog configuration
 
 **Features**:
+
 - Event tracking (orders, searches, verifications)
 - User identification with traits
 - Feature flag support for A/B testing
@@ -86,6 +97,7 @@ GET /admin/uploads/:fileName
 - Graceful degradation when disabled
 
 **Usage**:
+
 ```typescript
 const analyticsService = new AnalyticsService();
 
@@ -93,11 +105,14 @@ const analyticsService = new AnalyticsService();
 await analyticsService.trackEvent(userId, "Order Placed", {
   order_id: "order_123",
   total: 10000,
-  currency: "USD"
+  currency: "USD",
 });
 
 // Check feature flag
-const isEnabled = await analyticsService.isFeatureEnabled(userId, "new-checkout-flow");
+const isEnabled = await analyticsService.isFeatureEnabled(
+  userId,
+  "new-checkout-flow"
+);
 ```
 
 ---
@@ -107,12 +122,14 @@ const isEnabled = await analyticsService.isFeatureEnabled(userId, "new-checkout-
 **Status**: Already implemented (Task 7.3.5 - COMPLETED)
 
 **Features**:
+
 - Payment hold (manual capture) for escrow
 - Payment capture when order completes
 - Refund processing for disputes
 - Webhook handler for payment events
 
 **Configuration**:
+
 - Webhook endpoint: `/webhooks/stripe`
 - Manual capture mode enabled for escrow workflow
 
@@ -123,6 +140,7 @@ const isEnabled = await analyticsService.isFeatureEnabled(userId, "new-checkout-
 **Status**: Already implemented (Task 7.3.4 - COMPLETED)
 
 **Features**:
+
 - 10 email templates for all notification types
 - Integrated with workflow notification steps
 - Dynamic template data support
@@ -134,13 +152,16 @@ const isEnabled = await analyticsService.isFeatureEnabled(userId, "new-checkout-
 **Purpose**: Unified API for DHL, FedEx, UPS, and other carriers
 
 **Files Created**:
+
 - `src/services/webshipper.ts` - Webshipper API client
 - `src/api/webhooks/webshipper/route.ts` - Webhook handler for tracking updates
 
 **Updated**:
+
 - `.env` - Added Webshipper configuration
 
 **Features**:
+
 - Create shipments with multiple carriers
 - Get real-time tracking information
 - List available carriers and rates
@@ -148,6 +169,7 @@ const isEnabled = await analyticsService.isFeatureEnabled(userId, "new-checkout-
 - Shipment cancellation support
 
 **Usage**:
+
 ```typescript
 const webshipperService = new WebshipperService();
 
@@ -173,12 +195,14 @@ const tracking = await webshipperService.getTracking(shipment.id);
 **Purpose**: Automated email notifications for key events
 
 **Files Created/Updated**:
+
 - `src/subscribers/order-created.ts` - Notify seller of new orders (updated)
 - `src/subscribers/escrow-released.ts` - Notify seller of payment release
 - `src/subscribers/escrow-disputed.ts` - Notify admin of disputes
 - `src/subscribers/shipment-delivered.ts` - Notify buyer of delivery
 
 **Events Covered**:
+
 - `order.created` → Seller notification
 - `escrow.released` → Seller notification
 - `escrow.disputed` → Admin notification
@@ -279,14 +303,16 @@ All services gracefully degrade when API keys are missing/placeholder values.
 ## Task Status Update
 
 **Task 7.3: Integrate third-party services for platform features**
+
 - ✅ 7.3.1 MeiliSearch integration - COMPLETED
-- ✅ 7.3.2 MinIO integration - COMPLETED  
+- ✅ 7.3.2 MinIO integration - COMPLETED
 - ✅ 7.3.3 PostHog integration - COMPLETED
 - ✅ 7.3.4 SendGrid integration - COMPLETED (previous)
 - ✅ 7.3.5 Stripe integration - COMPLETED (previous)
 - ✅ 7.3.6 Webshipper integration - COMPLETED
 
 **Task 7.1: Create notification subscribers** - COMPLETED
+
 - ✅ Order creation notifications
 - ✅ Escrow status change notifications
 - ✅ Shipment delivery notifications

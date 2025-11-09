@@ -5,7 +5,9 @@ export default class AnalyticsService {
   private enabled: boolean;
 
   constructor() {
-    this.enabled = !!process.env.POSTHOG_API_KEY && process.env.POSTHOG_API_KEY !== "phc_your_project_api_key_here";
+    this.enabled =
+      !!process.env.POSTHOG_API_KEY &&
+      process.env.POSTHOG_API_KEY !== "phc_your_project_api_key_here";
 
     if (this.enabled) {
       this.client = new PostHog(process.env.POSTHOG_API_KEY!, {
@@ -14,9 +16,7 @@ export default class AnalyticsService {
         flushInterval: 10000, // Flush events every 10 seconds
       });
     } else {
-      console.log(
-        "PostHog analytics disabled - no API key configured"
-      );
+      console.log("PostHog analytics disabled - no API key configured");
     }
   }
 
@@ -79,10 +79,7 @@ export default class AnalyticsService {
    * @param feature - Feature flag key
    * @returns Feature flag payload
    */
-  async getFeatureFlagPayload(
-    userId: string,
-    feature: string
-  ): Promise<any> {
+  async getFeatureFlagPayload(userId: string, feature: string): Promise<any> {
     if (!this.enabled || !this.client) {
       return undefined;
     }

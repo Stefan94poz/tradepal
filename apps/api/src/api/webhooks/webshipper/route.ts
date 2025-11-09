@@ -19,7 +19,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     console.log(`Received Webshipper webhook: ${event}`, data);
 
     // Get shipment module service
-    const shipmentModuleService: any = req.scope.resolve("shipmentModuleService");
+    const shipmentModuleService: any = req.scope.resolve(
+      "shipmentModuleService"
+    );
 
     switch (event) {
       case "tracking_update": {
@@ -83,10 +85,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
             // This would trigger escrow release if buyer confirms
           }
         } catch (error) {
-          console.error(
-            `Failed to mark order ${orderId} as delivered:`,
-            error
-          );
+          console.error(`Failed to mark order ${orderId} as delivered:`, error);
         }
         break;
       }

@@ -41,7 +41,8 @@ export default class WebshipperService {
 
     if (this.enabled) {
       this.client = axios.create({
-        baseURL: process.env.WEBSHIPPER_BASE_URL || "https://api.webshipper.io/v2",
+        baseURL:
+          process.env.WEBSHIPPER_BASE_URL || "https://api.webshipper.io/v2",
         headers: {
           Authorization: `Bearer ${process.env.WEBSHIPPER_API_TOKEN}`,
           "Content-Type": "application/json",

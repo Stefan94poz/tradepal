@@ -23,10 +23,7 @@ export default async function productCreatedHandler({
 
     console.log(`Product ${product.id} indexed in MeiliSearch`);
   } catch (error) {
-    console.error(
-      `Failed to index product ${data.id} in MeiliSearch:`,
-      error
-    );
+    console.error(`Failed to index product ${data.id} in MeiliSearch:`, error);
   }
 }
 

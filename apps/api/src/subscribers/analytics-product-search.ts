@@ -7,12 +7,17 @@ import AnalyticsService from "../services/analytics";
  */
 export default async function productSearchAnalyticsHandler({
   event: { data },
-}: SubscriberArgs<{ query: string; filters: any; results_count: number; user_id?: string }>) {
+}: SubscriberArgs<{
+  query: string;
+  filters: any;
+  results_count: number;
+  user_id?: string;
+}>) {
   const analyticsService = new AnalyticsService();
 
   try {
     const userId = data.user_id || "anonymous";
-    
+
     await analyticsService.trackEvent(userId, "Product Search", {
       query: data.query,
       filters: data.filters,

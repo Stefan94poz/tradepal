@@ -38,10 +38,7 @@ export default class MinioService {
           ],
         };
 
-        await this.client.setBucketPolicy(
-          this.bucket,
-          JSON.stringify(policy)
-        );
+        await this.client.setBucketPolicy(this.bucket, JSON.stringify(policy));
       }
     } catch (error) {
       console.error("MinIO bucket initialization error:", error);
@@ -64,7 +61,13 @@ export default class MinioService {
       "Content-Type": contentType,
     };
 
-    await this.client.putObject(this.bucket, fileName, file, file.length, metadata);
+    await this.client.putObject(
+      this.bucket,
+      fileName,
+      file,
+      file.length,
+      metadata
+    );
 
     // Return public URL for product images
     if (fileName.startsWith("products/")) {

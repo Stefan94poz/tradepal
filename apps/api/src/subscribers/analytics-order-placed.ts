@@ -7,7 +7,12 @@ import AnalyticsService from "../services/analytics";
  */
 export default async function orderPlacedAnalyticsHandler({
   event: { data },
-}: SubscriberArgs<{ id: string; customer_id: string; total: number; currency_code: string }>) {
+}: SubscriberArgs<{
+  id: string;
+  customer_id: string;
+  total: number;
+  currency_code: string;
+}>) {
   const analyticsService = new AnalyticsService();
 
   try {

@@ -43,14 +43,19 @@ export default async function orderCreatedHandler({
         },
       });
 
-      console.log(`[ORDER SUBSCRIBER] Sent order notification to ${sellerEmail}`);
+      console.log(
+        `[ORDER SUBSCRIBER] Sent order notification to ${sellerEmail}`
+      );
     } else {
       console.warn(
         `[ORDER SUBSCRIBER] No seller email found for order ${orderId}`
       );
     }
   } catch (error) {
-    console.error(`[ORDER SUBSCRIBER] Failed to send order notification:`, error);
+    console.error(
+      `[ORDER SUBSCRIBER] Failed to send order notification:`,
+      error
+    );
   }
 }
 

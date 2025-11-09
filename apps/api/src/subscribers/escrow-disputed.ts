@@ -17,7 +17,8 @@ export default async function escrowDisputedHandler({
   dispute_reason: string;
 }>) {
   try {
-    const { order_id, amount, currency, dispute_reason, buyer_id, seller_id } = data;
+    const { order_id, amount, currency, dispute_reason, buyer_id, seller_id } =
+      data;
 
     // Send notification to admin
     const adminEmail = process.env.ADMIN_EMAIL || "admin@tradepal.com";
