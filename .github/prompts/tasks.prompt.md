@@ -4,100 +4,79 @@ mode: agent
 
 # Implementation Plan
 
-- [ ] 1. Set up project structure and initialize Medusa.js backend
-  - Initialize Medusa.js project with PostgreSQL and Redis configuration
+## Medusa v2 Development Notes
+
+This plan follows Medusa v2 architecture patterns:
+- **Modules**: All custom features are built as modules with data models and services
+- **Data Model Language (DML)**: Use `model.define()` instead of TypeORM decorators
+- **MikroORM Migrations**: Generate migrations with `npx medusa db:generate <module-name>`
+- **Workflows**: Business logic uses workflow SDK with steps and compensation functions
+- **File-Based API Routes**: Routes are created as `route.ts` files in directory structures
+- **Service Factory**: Services extend `MedusaService()` for auto-generated CRUD methods
+
+## Implementation Tasks
+
+- [ ] 1. Set up project structure and initialize Medusa v2 backend
+  - Initialize Medusa v2 project with PostgreSQL and Redis configuration
   - Configure environment variables for database, Redis, and external services
-  - Set up TypeORM with custom entity directory structure
+  - Set up module directory structure in `src/modules/`
   - Configure file storage with S3-compatible service
   - _Requirements: All requirements depend on proper project setup_
 
-- [ ] 2. Implement custom data models and database migrations
-  - [ ] 2.1 Create Seller Profile entity extending Medusa Customer
-    - Define SellerProfile entity with company_name, business_type, location, certifications, verification_status fields
-    - Create database migration for seller_profiles table with proper indexes
+- [ ] 2. Implement custom modules with data models (Medusa v2 DML)
+  - [ ] 2.1 Create Seller Module with SellerProfile data model
+    - Create `src/modules/seller/models/seller-profile.ts` using `model.define()`
+    - Define fields: company_name, business_type, description, country, city, address, certifications, verification_status
+    - Create `src/modules/seller/service.ts` extending `MedusaService`
+    - Add custom methods: `submitVerification()`, `approveVerification()`, `rejectVerification()`
+    - Create `src/modules/seller/index.ts` with module definition and export
+    - Register module in `medusa-config.ts`
+    - Generate migration: `npx medusa db:generate seller`
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
-  - [ ] 2.2 Create Buyer Profile entity extending Medusa Customer
-    - Define BuyerProfile entity with company_name, business_interests, business_needs, location, verification_status fields
-    - Create database migration for buyer_profiles table with proper indexes
+  - [ ] 2.2 Create Buyer Module with BuyerProfile data model
+    - Create `src/modules/buyer/models/buyer-profile.ts` using `model.define()`
+    - Define fields: company_name, business_interests, business_needs, country, city, address, verification_status
+    - Create `src/modules/buyer/service.ts` extending `MedusaService`
+    - Add custom methods: `submitVerification()`, `approveVerification()`
+    - Create `src/modules/buyer/index.ts` with module definition
+    - Register module in `medusa-config.ts`
+    - Generate migration: `npx medusa db:generate buyer`
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
-  - [ ] 2.3 Create Partner Directory Profile entity
-    - Define PartnerDirectoryProfile entity with company_name, country, industry, looking_for, offers fields
-    - Create database migration with GIN indexes for array fields and full-text search on company_name
+  - [ ] 2.3 Create Partner Module with PartnerProfile data model
+    - Create `src/modules/partner/models/partner-profile.ts` using `model.define()`
+    - Define fields: profile_type, company_name, country, industry, looking_for, offers, is_verified
+    - Add indexes for country and is_verified fields using `.indexes()` method
+    - Create `src/modules/partner/service.ts` with `searchPartners()` method
+    - Create `src/modules/partner/index.ts` with module definition
+    - Register module in `medusa-config.ts`
+    - Generate migration: `npx medusa db:generate partner`
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-  - [ ] 2.4 Create Escrow Transaction entity
-    - Define EscrowTransaction entity with order_id, buyer_id, seller_id, amount, status, payment_intent_id fields
-    - Create database migration with unique constraint on order_id
+  - [ ] 2.4 Create Escrow Module with EscrowTransaction data model
+    - Create `src/modules/escrow/models/escrow-transaction.ts` using `model.define()`
+    - Define fields: order_id, buyer_id, seller_id, amount, currency, status, payment_intent_id
+    - Add unique index on order_id field using `.indexes()` method
+    - Create `src/modules/escrow/service.ts` with escrow management methods
+    - Add methods: `createEscrow()`, `releaseEscrow()`, `disputeEscrow()`, `refundEscrow()`
+    - Create `src/modules/escrow/index.ts` with module definition
+    - Register module in `medusa-config.ts`
+    - Generate migration: `npx medusa db:generate escrow`
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
-  - [ ] 2.5 Create Shipment Tracking entity
-    - Define ShipmentTracking entity with order_id, carrier, tracking_number, status, tracking_events fields
-    - Create database migration with unique constraint on order_id
+  - [ ] 2.5 Create Shipment Module with ShipmentTracking data model
+    - Create `src/modules/shipment/models/shipment-tracking.ts` using `model.define()`
+    - Define fields: order_id, carrier, tracking_number, status, current_location, estimated_delivery
+    - Use `model.json()` for tracking_events field to store event array
+    - Add unique index on order_id using `.indexes()` method
+    - Create `src/modules/shipment/service.ts` with tracking methods
+    - Add methods: `addTracking()`, `updateTrackingStatus()`
+    - Create `src/modules/shipment/index.ts` with module definition
+    - Register module in `medusa-config.ts`
+    - Generate migration: `npx medusa db:generate shipment`
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
-  - [ ] 2.6 Create Verification Documents entity
-    - Define VerificationDocuments entity with user_id, document_urls, status, submission_date fields
-    - Create database migration with indexes on user_id and status
-    - _Requirements: 1.5, 4.5, 7.1, 7.2, 7.3, 7.4, 7.5_
-
-- [ ] 3. Implement VerificationService for profile verification
-  - [ ] 3.1 Create VerificationService class with core methods
-    - Implement submitVerification method to store documents and create verification request
-    - Implement getVerificationStatus method to retrieve current verification state
-    - Implement listPendingVerifications method for admin dashboard
-    - _Requirements: 7.1, 7.5_
-  - [ ] 3.2 Implement verification approval and rejection logic
-    - Implement approveVerification method to update profile status and send notification
-    - Implement rejectVerification method with reason tracking
-    - Add email notification integration for approval/rejection events
-    - _Requirements: 7.3, 7.4_
-
-- [ ] 4. Implement EscrowService for secure payment handling
-  - [ ] 4.1 Create EscrowService class with payment gateway integration
-    - Implement createEscrow method to hold payment when order is accepted
-    - Integrate with Stripe payment intents API for fund holding
-    - _Requirements: 9.1, 9.2_
-  - [ ] 4.2 Implement escrow release and dispute logic
-    - Implement releaseEscrow method with buyer confirmation validation
-    - Implement disputeEscrow method to flag transactions for admin review
-    - Implement refundEscrow method for admin-initiated refunds
-    - Add automatic fund release after 24 hours of delivery confirmation
-    - _Requirements: 9.3, 9.4, 9.5_
-
-- [ ] 5. Implement PartnerSearchService for B2B networking
-  - [ ] 5.1 Create PartnerSearchService with search functionality
-    - Implement searchPartners method with filters for country, industry, looking_for, offers
-    - Add full-text search on company_name field
-    - Implement pagination with 20 results per page
-    - Filter results to only show verified profiles
-    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-  - [ ] 5.2 Implement partner profile management
-    - Implement createPartnerProfile method to create directory entry
-    - Implement updatePartnerProfile method for profile updates
-    - Implement getPartnerProfile method to retrieve profile details
-    - _Requirements: 6.1, 6.5_
-
-- [ ] 6. Implement ShipmentTrackingService for order tracking
-  - [ ] 6.1 Create ShipmentTrackingService with carrier integration
-    - Implement addTracking method to store tracking information
-    - Implement getTrackingDetails method to retrieve current tracking state
-    - Integrate with shipping carrier APIs (start with one major carrier)
-    - _Requirements: 10.1, 10.2, 10.3_
-  - [ ] 6.2 Implement automatic tracking updates
-    - Implement updateTrackingStatus method to fetch updates from carrier API
-    - Set up scheduled job to update tracking every 4 hours
-    - Implement notification system for status changes
-    - Add automatic buyer/seller notification when status changes to delivered
-    - _Requirements: 10.4, 10.5_
-
-- [ ] 7. Create custom API endpoints for verification
-  - [ ] 7.1 Implement store verification endpoints
-    - Create POST /store/verification/submit endpoint for document submission
-    - Create GET /store/verification/status endpoint to check verification status
-    - Add authentication middleware to verify user identity
-    - _Requirements: 7.1_
-  - [ ] 7.2 Implement admin verification endpoints
-    - Create GET /admin/verifications endpoint to list pending verifications
-    - Create POST /admin/verifications/:id/approve endpoint for approval
-    - Create POST /admin/verifications/:id/reject endpoint with reason parameter
-    - Add admin role authorization middleware
+  - [ ] 2.6 Run all database migrations
+    - Execute: `npx medusa db:migrate` to apply all pending migrations
+    - Verify tables created in PostgreSQL database
+    - Test module service methods using Medusa container
+    - _Requirements: All data model requirements_
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
 - [ ] 8. Create custom API endpoints for escrow management
@@ -110,7 +89,54 @@ mode: agent
   - [ ] 8.2 Implement admin escrow endpoints
     - Create POST /admin/escrow/:id/refund endpoint for admin refunds
     - Create GET /admin/escrow endpoint to list all escrow transactions
-    - Add admin role authorization middleware
+    - [ ] 3. Implement workflows for business operations (Medusa v2 Workflow SDK)
+  - [ ] 3.1 Create verification workflows
+    - Create `src/workflows/submit-verification/` workflow with steps for document submission
+    - Create `src/workflows/approve-verification/` workflow with approval step and notification step
+    - Create `src/workflows/reject-verification/` workflow with rejection step and notification step
+    - Implement compensation functions in each step for rollback on failures
+    - _Requirements: 7.1, 7.3, 7.4_
+  - [ ] 3.2 Create escrow workflows
+    - Create `src/workflows/create-escrow/` workflow with payment hold step and escrow creation step
+    - Create `src/workflows/release-escrow/` workflow with payment capture and escrow update steps
+    - Create `src/workflows/dispute-escrow/` workflow with dispute flagging and admin notification
+    - Create `src/workflows/refund-escrow/` workflow with refund processing and status update
+    - Add compensation functions for payment rollbacks
+    - _Requirements: 9.1, 9.2, 9.3, 9.4_
+  - [ ] 3.3 Create partner and shipment workflows
+    - Create `src/workflows/create-partner-profile/` workflow for partner directory entries
+    - Create `src/workflows/add-tracking/` workflow for shipment tracking creation
+    - Create `src/workflows/update-tracking/` workflow for tracking status updates
+    - _Requirements: 6.1, 10.1, 10.4_
+
+- [ ] 4. Create custom API routes using file-based routing
+  - [ ] 4.1 Implement verification API routes
+    - Create `src/api/admin/verifications/route.ts` with GET handler to list pending verifications
+    - Create `src/api/admin/verifications/[id]/approve/route.ts` with POST handler
+    - Create `src/api/admin/verifications/[id]/reject/route.ts` with POST handler
+    - Create `src/api/store/verification/submit/route.ts` with POST handler
+    - Create `src/api/store/verification/status/route.ts` with GET handler
+    - All routes should call corresponding workflows, not services directly
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [ ] 4.2 Implement escrow API routes
+    - Create `src/api/store/orders/[id]/escrow/route.ts` with GET handler
+    - Create `src/api/store/orders/[id]/escrow/release/route.ts` with POST handler
+    - Create `src/api/store/orders/[id]/escrow/dispute/route.ts` with POST handler
+    - Create `src/api/admin/escrow/[id]/refund/route.ts` with POST handler
+    - Routes should execute workflows and return results
+    - _Requirements: 9.3, 9.4, 9.5_
+  - [ ] 4.3 Implement partner directory API routes
+    - Create `src/api/store/partners/search/route.ts` with GET handler
+    - Create `src/api/store/partners/profile/route.ts` with POST handler for create/update
+    - Create `src/api/store/partners/[id]/route.ts` with GET handler for profile details
+    - _Requirements: 6.1, 6.2, 6.3_
+  - [ ] 4.4 Implement shipment tracking API routes
+    - Create `src/api/store/orders/[id]/tracking/route.ts` with POST and GET handlers
+    - POST handler should execute add tracking workflow
+    - GET handler should retrieve tracking from shipment module service
+    - _Requirements: 10.1, 10.2, 10.3_
+
+- [ ] 5. Extend Medusa order workflow for B2B operations
     - _Requirements: 9.4, 11.2, 11.3_
 
 - [ ] 9. Create custom API endpoints for partner directory
@@ -127,54 +153,71 @@ mode: agent
   - Add role-based authorization (sellers can add, both parties can view)
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 11. Extend Medusa order workflow for B2B operations
-  - [ ] 11.1 Customize order creation flow
-    - Override order creation to support B2B-specific fields (bulk quantities, delivery terms)
-    - Add seller notification when new order is created
-    - Implement order acceptance/decline functionality for sellers
+- [ ] 5. Extend Medusa order workflow for B2B operations
+  - [ ] 5.1 Create custom order workflow or extend existing
+    - Create workflow for B2B order creation with seller-specific fields
+    - Add workflow step for seller notification when new order is created
+    - Implement order acceptance/decline workflow for sellers
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
-  - [ ] 11.2 Integrate escrow with order workflow
-    - Add escrow creation hook when seller accepts order
-    - Update order status based on escrow state transitions
-    - Implement order completion when escrow is released
+  - [ ] 5.2 Integrate escrow with order workflow
+    - Add workflow hook to trigger escrow creation when seller accepts order
+    - Create workflow to update order status based on escrow state transitions
+    - Implement order completion workflow when escrow is released
     - _Requirements: 8.5, 9.1, 9.3_
 
-- [ ] 12. Implement product management for sellers
-  - [ ] 12.1 Extend Medusa product service for B2B features
-    - Add B2B-specific product fields (minimum order quantity, bulk pricing tiers)
-    - Implement product CRUD operations in seller dashboard context
-    - Add product visibility controls (draft, published)
+- [ ] 6. Implement product management using Medusa Product Module
+  - [ ] 6.1 Extend product functionality for B2B features
+    - Use Medusa's built-in Product Module with additional metadata for B2B fields
+    - Store minimum order quantity and bulk pricing in product metadata
+    - Implement product CRUD operations in seller dashboard using workflows
+    - Add product visibility controls using Medusa's draft/published status
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
-  - [ ] 12.2 Implement product search and filtering
-    - Create global product search endpoint with full-text search
+  - [ ] 6.2 Implement product search and filtering
+    - Create custom API route for global product search
+    - Use Medusa's product search capabilities with custom filters
     - Implement filters for category, price range, seller location, minimum order quantity
     - Add pagination with 20 products per page
-    - Optimize search queries with proper indexes
+    - Optimize search queries with proper database indexes
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 13. Initialize Next.js frontend project
-  - Create Next.js 14+ project with App Router
+- [ ] 7. Implement notification system using subscribers
+  - [ ] 7.1 Create notification subscribers
+    - Create `src/subscribers/` directory for event subscribers
+    - Implement subscriber for verification approval events
+    - Implement subscriber for order creation events
+    - Implement subscriber for escrow status changes
+    - Implement subscriber for shipment delivery events
+    - _Requirements: 7.3, 7.4, 8.2, 10.5_
+  - [ ] 7.2 Integrate email notification service
+    - Set up email service provider (SendGrid, Mailgun, or similar)
+    - Create email templates for verification, orders, escrow, shipment events
+    - Implement email sending in notification subscribers
+    - Add notification preferences to user profiles
+    - _Requirements: 7.3, 7.4, 8.2, 9.1, 10.5_
+
+- [ ] 8. Initialize Next.js 15 frontend project
+  - Create Next.js 15 project with App Router
   - Install and configure Tailwind CSS
   - Set up shadcn/ui component library
-  - Configure environment variables for API endpoints
-  - Set up authentication context and API client utilities
+  - Configure environment variables for Medusa API endpoints (default: http://localhost:9000)
+  - Set up authentication context and API client utilities for Medusa v2 REST API
   - _Requirements: All frontend requirements depend on proper project setup_
 
-- [ ] 14. Implement authentication and registration flows
-  - [ ] 14.1 Create login and registration pages
+- [ ] 9. Implement authentication and registration flows
+  - [ ] 9.1 Create login and registration pages
     - Build login page with email/password form
     - Build registration page with role selection (seller/buyer)
     - Create role-specific registration forms with required fields
-    - Integrate with Medusa auth API endpoints
+    - Integrate with Medusa v2 auth API endpoints
     - _Requirements: 1.1, 1.2, 4.1, 4.2_
-  - [ ] 14.2 Implement authentication context and protected routes
+  - [ ] 9.2 Implement authentication context and protected routes
     - Create AuthContext for managing user session state
     - Implement protected route wrapper for role-based access
     - Add automatic token refresh logic
     - Create logout functionality
     - _Requirements: All requirements depend on authentication_
 
-- [ ] 15. Build seller dashboard and product management UI
+- [ ] 10. Build seller dashboard and product management UI
   - [ ] 15.1 Create seller dashboard layout and navigation
     - Build dashboard layout with sidebar navigation
     - Create dashboard home page with key metrics (total products, pending orders)

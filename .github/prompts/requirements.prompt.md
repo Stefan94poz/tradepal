@@ -6,7 +6,16 @@ mode: agent
 
 ## Introduction
 
-This document specifies the requirements for a comprehensive B2B (Business-to-Business) marketplace platform that connects business sellers (manufacturers, wholesalers) with business buyers (distributors, retailers). The platform facilitates product discovery, partner networking, secure transactions, and trust-building through verification and escrow systems. The system will be built using Medusa.js for the backend, Next.js for the frontend, and Tailwind CSS with shadcn/ui for the user interface.
+This document specifies the requirements for a comprehensive B2B (Business-to-Business) marketplace platform that connects business sellers (manufacturers, wholesalers) with business buyers (distributors, retailers). The platform facilitates product discovery, partner networking, secure transactions, and trust-building through verification and escrow systems. The system will be built using **Medusa v2** for the backend, Next.js 15 for the frontend, and Tailwind CSS with shadcn/ui for the user interface.
+
+### Medusa v2 Architecture Notes
+
+This platform leverages Medusa v2's key features:
+- **Modules**: Custom business logic is organized into domain-specific modules (Seller, Buyer, Partner, Escrow, Shipment)
+- **Data Model Language (DML)**: Database tables are defined using Medusa's DML instead of TypeORM entities
+- **Workflows**: Business operations use workflows with built-in rollback and retry mechanisms
+- **File-Based API Routing**: API endpoints follow Medusa v2's file-based routing system
+- **MikroORM**: Database migrations are managed using MikroORM (not TypeORM)
 
 ## Glossary
 

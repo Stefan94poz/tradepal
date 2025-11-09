@@ -57,9 +57,9 @@ The platform supports three distinct user roles (Sellers, Buyers, Administrators
 ### Technology Stack Details
 
 - **Backend**: Medusa.js v2.x with Node.js
-- **Frontend**: Next.js 14+ with App Router
+- **Frontend**: Next.js 15 with App Router
 - **Database**: PostgreSQL 14+
-- **ORM**: TypeORM (Medusa default)
+- **ORM**: MikroORM (Medusa v2 default)
 - **UI Framework**: Tailwind CSS + shadcn/ui
 - **Authentication**: Medusa Auth with JWT
 - **File Storage**: S3-compatible storage (AWS S3 or MinIO)
@@ -70,177 +70,758 @@ The platform supports three distinct user roles (Sellers, Buyers, Administrators
 
 ### Backend Components (Medusa.js)
 
-#### 1. Custom Data Models
+#### 1. Custom Data Models (using Medusa v2 Data Model Language)
 
-**Seller Profile Extension**
+**Seller Profile Model**
 
 ```typescript
-// Extends Medusa Customer entity
-{
-  id: string
-  user_id: string // Reference to Medusa User
-  company_name: string
-  business_type: string
-  description: string
-  location: {
-    country: string
-    city: string
-    address: string
+// src/modules/seller/models/seller-profile.ts
+import { model } from "@medusajs/framework/utils"
+
+const SellerProfile = model.define("seller_profile", {
+  id: model.id().primaryKey(),
+  user_id: model.text().searchable(),
+  company_name: model.text().searchable(),
+  business_type: model.text(),
+  description: model.text(),
+  country: model.text(),
+  city: model.text(),
+  address: model.text(),
+  certifications: model.array(), // Array of URLs
+  verification_status: model.enum(['pending', 'verified', 'rejected']).default('pending'),
+  verification_documents: model.array(), // Array of URLs
+  is_seller: model.boolean().default(true),
+})
+
+export default SellerProfile
+```
+
+**Buyer Profile Model**
+
+```typescript
+// src/modules/buyer/models/buyer-profile.ts
+import { model } from "@medusajs/framework/utils"
+
+const BuyerProfile = model.define("buyer_profile", {
+  id: model.id().primaryKey(),
+  user_id: model.text().searchable(),
+  company_name: model.text().searchable(),
+  business_interests: model.array(), // Array of strings
+  business_needs: model.text(),
+  country: model.text(),
+  city: model.text(),
+  address: model.text(),
+  verification_status: model.enum(['pending', 'verified', 'rejected']).default('pending'),
+  verification_documents: model.array(), // Array of URLs
+  is_buyer: model.boolean().default(true),
+})
+
+export default BuyerProfile
+```
+
+**Partner Directory Profile Model**
+
+```typescript
+// src/modules/partner/models/partner-profile.ts
+import { model } from "@medusajs/framework/utils"
+
+const PartnerProfile = model.define("partner_profile", {
+  id: model.id().primaryKey(),
+  user_id: model.text().searchable(),
+  profile_type: model.enum(['seller', 'buyer']),
+  company_name: model.text().searchable(),
+  country: model.text(),
+  industry: model.array(), // Array of strings
+  looking_for: model.array(), // Array of enum values
+  offers: model.array(), // Array of enum values
+  is_verified: model.boolean().default(false),
+})
+  .indexes([
+    {
+      on: ["country"],
+    },
+    {
+      on: ["is_verified"],
+    },
+  ])
+
+export default PartnerProfile
+```
+
+**Escrow Transaction Model**
+
+```typescript
+// src/modules/escrow/models/escrow-transaction.ts
+import { model } from "@medusajs/framework/utils"
+
+const EscrowTransaction = model.define("escrow_transaction", {
+  id: model.id().primaryKey(),
+  order_id: model.text().searchable(),
+  buyer_id: model.text(),
+  seller_id: model.text(),
+  amount: model.bigNumber(),
+  currency: model.text(),
+  status: model.enum(['held', 'released', 'disputed', 'refunded']).default('held'),
+  payment_intent_id: model.text(),
+  held_at: model.dateTime(),
+  released_at: model.dateTime().nullable(),
+  dispute_reason: model.text().nullable(),
+})
+  .indexes([
+    {
+      on: ["order_id"],
+      unique: true,
+    },
+    {
+      on: ["status"],
+    },
+  ])
+
+export default EscrowTransaction
+```
+
+**Shipment Tracking Model**
+
+```typescript
+// src/modules/shipment/models/shipment-tracking.ts
+import { model } from "@medusajs/framework/utils"
+
+const ShipmentTracking = model.define("shipment_tracking", {
+  id: model.id().primaryKey(),
+  order_id: model.text().searchable(),
+  carrier: model.text(),
+  tracking_number: model.text(),
+  status: model.enum(['pending', 'in_transit', 'delivered', 'failed']).default('pending'),
+  current_location: model.text().nullable(),
+  estimated_delivery: model.dateTime().nullable(),
+  last_updated: model.dateTime(),
+  tracking_events: model.json(), // JSON array of tracking events
+})
+  .indexes([
+    {
+      on: ["order_id"],
+      unique: true,
+    },
+    {
+      on: ["tracking_number"],
+    },
+  ])
+
+export default ShipmentTracking
+```
+
+#### 2. Custom Module Services (using Medusa v2 Service Factory)
+
+**SellerModule Service**
+
+```typescript
+// src/modules/seller/service.ts
+import { MedusaService } from "@medusajs/framework/utils"
+import SellerProfile from "./models/seller-profile"
+
+class SellerModuleService extends MedusaService({
+  SellerProfile,
+}) {
+  // Custom methods beyond auto-generated CRUD
+  async submitVerification(userId: string, documents: string[]) {
+    const profile = await this.listSellerProfiles({
+      filters: { user_id: userId }
+    })
+    
+    if (!profile.length) {
+      throw new Error("Seller profile not found")
+    }
+    
+    return await this.updateSellerProfiles(profile[0].id, {
+      verification_documents: documents,
+      verification_status: 'pending'
+    })
   }
-  certifications: string[] // URLs to certification documents
-  verification_status: 'pending' | 'verified' | 'rejected'
-  verification_documents: string[] // URLs to verification docs
-  is_seller: boolean
-  created_at: Date
-  updated_at: Date
-}
-```
-
-**Buyer Profile Extension**
-
-```typescript
-// Extends Medusa Customer entity
-{
-  id: string
-  user_id: string // Reference to Medusa User
-  company_name: string
-  business_interests: string[]
-  business_needs: string
-  location: {
-    country: string
-    city: string
-    address: string
+  
+  async approveVerification(userId: string) {
+    const profile = await this.listSellerProfiles({
+      filters: { user_id: userId }
+    })
+    
+    return await this.updateSellerProfiles(profile[0].id, {
+      verification_status: 'verified'
+    })
   }
-  verification_status: 'pending' | 'verified' | 'rejected'
-  verification_documents: string[] // URLs to verification docs
-  is_buyer: boolean
-  created_at: Date
-  updated_at: Date
-}
-```
-
-**Partner Directory Profile**
-
-```typescript
-{
-  id: string
-  user_id: string
-  profile_type: 'seller' | 'buyer'
-  company_name: string
-  country: string
-  industry: string[]
-  looking_for: ('suppliers' | 'buyers' | 'distributors')[]
-  offers: ('manufacturing' | 'wholesale' | 'distribution')[]
-  is_verified: boolean
-  created_at: Date
-  updated_at: Date
-}
-```
-
-**Escrow Transaction**
-
-```typescript
-{
-  id: string;
-  order_id: string; // Reference to Medusa Order
-  buyer_id: string;
-  seller_id: string;
-  amount: number;
-  currency: string;
-  status: "held" | "released" | "disputed" | "refunded";
-  payment_intent_id: string; // Payment gateway reference
-  held_at: Date;
-  released_at: Date | null;
-  dispute_reason: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-```
-
-**Shipment Tracking**
-
-```typescript
-{
-  id: string;
-  order_id: string;
-  carrier: string;
-  tracking_number: string;
-  status: "pending" | "in_transit" | "delivered" | "failed";
-  current_location: string | null;
-  estimated_delivery: Date | null;
-  last_updated: Date;
-  tracking_events: {
-    timestamp: Date;
-    status: string;
-    location: string;
-    description: string;
+  
+  async rejectVerification(userId: string, reason: string) {
+    const profile = await this.listSellerProfiles({
+      filters: { user_id: userId }
+    })
+    
+    return await this.updateSellerProfiles(profile[0].id, {
+      verification_status: 'rejected'
+    })
   }
-  [];
-  created_at: Date;
-  updated_at: Date;
+}
+
+export default SellerModuleService
+```
+
+**BuyerModule Service**
+
+```typescript
+// src/modules/buyer/service.ts
+import { MedusaService } from "@medusajs/framework/utils"
+import BuyerProfile from "./models/buyer-profile"
+
+class BuyerModuleService extends MedusaService({
+  BuyerProfile,
+}) {
+  async submitVerification(userId: string, documents: string[]) {
+    const profile = await this.listBuyerProfiles({
+      filters: { user_id: userId }
+    })
+    
+    if (!profile.length) {
+      throw new Error("Buyer profile not found")
+    }
+    
+    return await this.updateBuyerProfiles(profile[0].id, {
+      verification_documents: documents,
+      verification_status: 'pending'
+    })
+  }
+  
+  async approveVerification(userId: string) {
+    const profile = await this.listBuyerProfiles({
+      filters: { user_id: userId }
+    })
+    
+    return await this.updateBuyerProfiles(profile[0].id, {
+      verification_status: 'verified'
+    })
+  }
+}
+
+export default BuyerModuleService
+```
+
+**EscrowModule Service**
+
+```typescript
+// src/modules/escrow/service.ts
+import { MedusaService } from "@medusajs/framework/utils"
+import EscrowTransaction from "./models/escrow-transaction"
+
+class EscrowModuleService extends MedusaService({
+  EscrowTransaction,
+}) {
+  async createEscrow(data: {
+    order_id: string
+    buyer_id: string
+    seller_id: string
+    amount: number
+    currency: string
+    payment_intent_id: string
+  }) {
+    return await this.createEscrowTransactions({
+      ...data,
+      status: 'held',
+      held_at: new Date()
+    })
+  }
+  
+  async releaseEscrow(orderId: string) {
+    const escrow = await this.listEscrowTransactions({
+      filters: { order_id: orderId }
+    })
+    
+    if (!escrow.length) {
+      throw new Error("Escrow transaction not found")
+    }
+    
+    return await this.updateEscrowTransactions(escrow[0].id, {
+      status: 'released',
+      released_at: new Date()
+    })
+  }
+  
+  async disputeEscrow(orderId: string, reason: string) {
+    const escrow = await this.listEscrowTransactions({
+      filters: { order_id: orderId }
+    })
+    
+    return await this.updateEscrowTransactions(escrow[0].id, {
+      status: 'disputed',
+      dispute_reason: reason
+    })
+  }
+  
+  async refundEscrow(orderId: string) {
+    const escrow = await this.listEscrowTransactions({
+      filters: { order_id: orderId }
+    })
+    
+    return await this.updateEscrowTransactions(escrow[0].id, {
+      status: 'refunded'
+    })
+  }
+}
+
+export default EscrowModuleService
+```
+
+**PartnerModule Service**
+
+```typescript
+// src/modules/partner/service.ts
+import { MedusaService } from "@medusajs/framework/utils"
+import PartnerProfile from "./models/partner-profile"
+
+class PartnerModuleService extends MedusaService({
+  PartnerProfile,
+}) {
+  async searchPartners(filters: {
+    country?: string
+    industry?: string[]
+    looking_for?: string[]
+    offers?: string[]
+  }) {
+    return await this.listPartnerProfiles({
+      filters: {
+        ...filters,
+        is_verified: true
+      },
+      skip: filters.skip || 0,
+      take: filters.take || 20
+    })
+  }
+}
+
+export default PartnerModuleService
+```
+
+**ShipmentModule Service**
+
+```typescript
+// src/modules/shipment/service.ts
+import { MedusaService } from "@medusajs/framework/utils"
+import ShipmentTracking from "./models/shipment-tracking"
+
+class ShipmentModuleService extends MedusaService({
+  ShipmentTracking,
+}) {
+  async addTracking(data: {
+    order_id: string
+    carrier: string
+    tracking_number: string
+  }) {
+    return await this.createShipmentTrackings({
+      ...data,
+      status: 'pending',
+      last_updated: new Date()
+    })
+  }
+  
+  async updateTrackingStatus(orderId: string, status: string, location?: string) {
+    const tracking = await this.listShipmentTrackings({
+      filters: { order_id: orderId }
+    })
+    
+    if (!tracking.length) {
+      throw new Error("Tracking not found")
+    }
+    
+    return await this.updateShipmentTrackings(tracking[0].id, {
+      status,
+      current_location: location,
+      last_updated: new Date()
+    })
+  }
+}
+
+export default ShipmentModuleService
+```
+
+#### 3. Custom API Routes (using Medusa v2 File-Based Routing)
+
+**Verification API Routes**
+
+```typescript
+// src/api/admin/verifications/[id]/approve/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { approveVerificationWorkflow } from "../../../../../workflows/approve-verification"
+
+export async function POST(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  
+  const { result } = await approveVerificationWorkflow(req.scope)
+    .run({
+      input: { userId: id }
+    })
+  
+  res.json({ verification: result })
 }
 ```
 
-#### 2. Custom Services
+```typescript
+// src/api/admin/verifications/[id]/reject/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { rejectVerificationWorkflow } from "../../../../../workflows/reject-verification"
 
-**VerificationService**
+export async function POST(
+  req: MedusaRequest<{ reason: string }>,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  const { reason } = req.validatedBody
+  
+  const { result } = await rejectVerificationWorkflow(req.scope)
+    .run({
+      input: { userId: id, reason }
+    })
+  
+  res.json({ verification: result })
+}
+```
 
-- `submitVerification(userId, documents)`: Submit verification documents
-- `approveVerification(userId, adminId)`: Approve a verification request
-- `rejectVerification(userId, adminId, reason)`: Reject with reason
-- `getVerificationStatus(userId)`: Get current verification status
-- `listPendingVerifications()`: List all pending verifications for admin
+```typescript
+// src/api/admin/verifications/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { SELLER_MODULE } from "../../../modules/seller"
+import { BUYER_MODULE } from "../../../modules/buyer"
 
-**EscrowService**
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const sellerService = req.scope.resolve(SELLER_MODULE)
+  const buyerService = req.scope.resolve(BUYER_MODULE)
+  
+  const sellerVerifications = await sellerService.listSellerProfiles({
+    filters: { verification_status: 'pending' }
+  })
+  
+  const buyerVerifications = await buyerService.listBuyerProfiles({
+    filters: { verification_status: 'pending' }
+  })
+  
+  res.json({
+    verifications: [...sellerVerifications, ...buyerVerifications]
+  })
+}
+```
 
-- `createEscrow(orderId, amount)`: Create escrow transaction when order is accepted
-- `releaseEscrow(orderId, buyerId)`: Release funds to seller on delivery confirmation
-- `disputeEscrow(orderId, reason)`: Flag escrow for dispute resolution
-- `refundEscrow(orderId, adminId)`: Refund to buyer (admin action)
-- `getEscrowStatus(orderId)`: Get escrow transaction status
+```typescript
+// src/api/store/verification/submit/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { submitVerificationWorkflow } from "../../../../workflows/submit-verification"
 
-**PartnerSearchService**
+export async function POST(
+  req: MedusaRequest<{ documents: string[] }>,
+  res: MedusaResponse
+) {
+  const userId = req.auth_context?.actor_id
+  const { documents } = req.validatedBody
+  
+  const { result } = await submitVerificationWorkflow(req.scope)
+    .run({
+      input: { userId, documents }
+    })
+  
+  res.json({ verification: result })
+}
+```
 
-- `searchPartners(filters)`: Search partner directory with filters
-- `createPartnerProfile(userId, profileData)`: Create partner directory entry
-- `updatePartnerProfile(userId, profileData)`: Update partner profile
-- `getPartnerProfile(userId)`: Retrieve partner profile details
+```typescript
+// src/api/store/verification/status/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { SELLER_MODULE } from "../../../modules/seller"
 
-**ShipmentTrackingService**
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const userId = req.auth_context?.actor_id
+  const sellerService = req.scope.resolve(SELLER_MODULE)
+  
+  const profile = await sellerService.listSellerProfiles({
+    filters: { user_id: userId }
+  })
+  
+  res.json({
+    verification_status: profile[0]?.verification_status || 'not_submitted'
+  })
+}
+```
 
-- `addTracking(orderId, carrier, trackingNumber)`: Add tracking to order
-- `updateTrackingStatus(orderId)`: Fetch and update tracking from carrier API
-- `getTrackingDetails(orderId)`: Get current tracking information
-- `subscribeToTrackingUpdates(orderId)`: Set up automatic tracking updates
+**Escrow API Routes**
 
-#### 3. Custom API Endpoints
+```typescript
+// src/api/store/orders/[id]/escrow/release/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { releaseEscrowWorkflow } from "../../../../../../workflows/release-escrow"
 
-**Verification Endpoints**
+export async function POST(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  
+  const { result } = await releaseEscrowWorkflow(req.scope)
+    .run({
+      input: { orderId: id }
+    })
+  
+  res.json({ escrow: result })
+}
+```
 
-- `POST /admin/verifications/:id/approve`: Approve verification
-- `POST /admin/verifications/:id/reject`: Reject verification
-- `GET /admin/verifications`: List pending verifications
-- `POST /store/verification/submit`: Submit verification documents
-- `GET /store/verification/status`: Get own verification status
+```typescript
+// src/api/store/orders/[id]/escrow/dispute/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { disputeEscrowWorkflow } from "../../../../../../workflows/dispute-escrow"
 
-**Escrow Endpoints**
+export async function POST(
+  req: MedusaRequest<{ reason: string }>,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  const { reason } = req.validatedBody
+  
+  const { result } = await disputeEscrowWorkflow(req.scope)
+    .run({
+      input: { orderId: id, reason }
+    })
+  
+  res.json({ escrow: result })
+}
+```
 
-- `POST /store/orders/:id/escrow/release`: Buyer confirms delivery
-- `POST /store/orders/:id/escrow/dispute`: Flag dispute
-- `GET /store/orders/:id/escrow`: Get escrow status
-- `POST /admin/escrow/:id/refund`: Admin refund action
+```typescript
+// src/api/store/orders/[id]/escrow/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { ESCROW_MODULE } from "../../../../../modules/escrow"
 
-**Partner Directory Endpoints**
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  const escrowService = req.scope.resolve(ESCROW_MODULE)
+  
+  const escrow = await escrowService.listEscrowTransactions({
+    filters: { order_id: id }
+  })
+  
+  res.json({ escrow: escrow[0] })
+}
+```
 
-- `GET /store/partners/search`: Search partner directory
-- `POST /store/partners/profile`: Create/update partner profile
-- `GET /store/partners/:id`: Get partner profile details
+**Partner Directory API Routes**
 
-**Shipment Tracking Endpoints**
+```typescript
+// src/api/store/partners/search/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { PARTNER_MODULE } from "../../../../modules/partner"
 
-- `POST /store/orders/:id/tracking`: Add tracking information
-- `GET /store/orders/:id/tracking`: Get tracking details
-- `PUT /store/orders/:id/tracking/refresh`: Manually refresh tracking
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const partnerService = req.scope.resolve(PARTNER_MODULE)
+  const { country, industry, looking_for, offers } = req.query
+  
+  const partners = await partnerService.searchPartners({
+    country,
+    industry: industry ? JSON.parse(industry) : undefined,
+    looking_for: looking_for ? JSON.parse(looking_for) : undefined,
+    offers: offers ? JSON.parse(offers) : undefined
+  })
+  
+  res.json({ partners })
+}
+```
+
+```typescript
+// src/api/store/partners/profile/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { createPartnerProfileWorkflow } from "../../../../workflows/create-partner-profile"
+
+export async function POST(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const userId = req.auth_context?.actor_id
+  
+  const { result } = await createPartnerProfileWorkflow(req.scope)
+    .run({
+      input: { userId, ...req.validatedBody }
+    })
+  
+  res.json({ profile: result })
+}
+```
+
+**Shipment Tracking API Routes**
+
+```typescript
+// src/api/store/orders/[id]/tracking/route.ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { addTrackingWorkflow } from "../../../../../workflows/add-tracking"
+import { SHIPMENT_MODULE } from "../../../../../modules/shipment"
+
+export async function POST(
+  req: MedusaRequest<{ carrier: string; tracking_number: string }>,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  const { carrier, tracking_number } = req.validatedBody
+  
+  const { result } = await addTrackingWorkflow(req.scope)
+    .run({
+      input: { order_id: id, carrier, tracking_number }
+    })
+  
+  res.json({ tracking: result })
+}
+
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const { id } = req.params
+  const shipmentService = req.scope.resolve(SHIPMENT_MODULE)
+  
+  const tracking = await shipmentService.listShipmentTrackings({
+    filters: { order_id: id }
+  })
+  
+  res.json({ tracking: tracking[0] })
+}
+```
+
+#### 4. Custom Workflows (using Medusa v2 Workflow SDK)
+
+**Approve Verification Workflow**
+
+```typescript
+// src/workflows/approve-verification/index.ts
+import {
+  createWorkflow,
+  WorkflowResponse
+} from "@medusajs/framework/workflows-sdk"
+import { approveVerificationStep } from "./steps/approve-verification"
+import { sendNotificationStep } from "./steps/send-notification"
+
+type WorkflowInput = {
+  userId: string
+}
+
+export const approveVerificationWorkflow = createWorkflow(
+  "approve-verification",
+  (input: WorkflowInput) => {
+    const verification = approveVerificationStep(input)
+    sendNotificationStep({
+      userId: input.userId,
+      type: 'verification_approved'
+    })
+    
+    return new WorkflowResponse(verification)
+  }
+)
+```
+
+```typescript
+// src/workflows/approve-verification/steps/approve-verification.ts
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
+import { SELLER_MODULE } from "../../../modules/seller"
+
+export const approveVerificationStep = createStep(
+  "approve-verification",
+  async (input: { userId: string }, { container }) => {
+    const sellerService = container.resolve(SELLER_MODULE)
+    
+    const profile = await sellerService.approveVerification(input.userId)
+    
+    return new StepResponse(profile, profile.id)
+  },
+  async (profileId, { container }) => {
+    if (!profileId) return
+    
+    const sellerService = container.resolve(SELLER_MODULE)
+    await sellerService.updateSellerProfiles(profileId, {
+      verification_status: 'pending'
+    })
+  }
+)
+```
+
+**Create Escrow Workflow**
+
+```typescript
+// src/workflows/create-escrow/index.ts
+import {
+  createWorkflow,
+  WorkflowResponse
+} from "@medusajs/framework/workflows-sdk"
+import { createEscrowStep } from "./steps/create-escrow"
+import { holdPaymentStep } from "./steps/hold-payment"
+
+type WorkflowInput = {
+  orderId: string
+  buyerId: string
+  sellerId: string
+  amount: number
+  currency: string
+}
+
+export const createEscrowWorkflow = createWorkflow(
+  "create-escrow",
+  (input: WorkflowInput) => {
+    const paymentIntent = holdPaymentStep({
+      amount: input.amount,
+      currency: input.currency
+    })
+    
+    const escrow = createEscrowStep({
+      ...input,
+      payment_intent_id: paymentIntent.id
+    })
+    
+    return new WorkflowResponse(escrow)
+  }
+)
+```
+
+**Release Escrow Workflow**
+
+```typescript
+// src/workflows/release-escrow/index.ts
+import {
+  createWorkflow,
+  WorkflowResponse
+} from "@medusajs/framework/workflows-sdk"
+import { releaseEscrowStep } from "./steps/release-escrow"
+import { capturePaymentStep } from "./steps/capture-payment"
+import { sendNotificationStep } from "./steps/send-notification"
+
+type WorkflowInput = {
+  orderId: string
+}
+
+export const releaseEscrowWorkflow = createWorkflow(
+  "release-escrow",
+  (input: WorkflowInput) => {
+    const escrow = releaseEscrowStep(input)
+    capturePaymentStep({ paymentIntentId: escrow.payment_intent_id })
+    sendNotificationStep({
+      orderId: input.orderId,
+      type: 'escrow_released'
+    })
+    
+    return new WorkflowResponse(escrow)
+  }
+)
+```
 
 ### Frontend Components (Next.js)
 
@@ -325,44 +906,91 @@ app/
 
 ### Database Schema Extensions
 
-The platform extends Medusa's core schema with custom tables:
+The platform extends Medusa's core schema with custom tables managed through modules:
 
-**seller_profiles**
+**Module Registration**
+
+All custom modules must be registered in `medusa-config.ts`:
+
+```typescript
+// medusa-config.ts
+import { defineConfig } from "@medusajs/framework/utils"
+
+module.exports = defineConfig({
+  projectConfig: {
+    databaseUrl: process.env.DATABASE_URL,
+    // ... other config
+  },
+  modules: [
+    {
+      resolve: "./modules/seller",
+    },
+    {
+      resolve: "./modules/buyer",
+    },
+    {
+      resolve: "./modules/partner",
+    },
+    {
+      resolve: "./modules/escrow",
+    },
+    {
+      resolve: "./modules/shipment",
+    },
+  ],
+})
+```
+
+**Generating and Running Migrations**
+
+Medusa v2 uses MikroORM for migrations. Generate migrations for your modules:
+
+```bash
+# Generate migrations for all modules
+npx medusa db:generate seller
+npx medusa db:generate buyer
+npx medusa db:generate partner
+npx medusa db:generate escrow
+npx medusa db:generate shipment
+
+# Run all migrations
+npx medusa db:migrate
+```
+
+**seller_profiles Table**
 
 - Primary key: id (uuid)
 - Foreign key: user_id → users.id
-- Indexes: user_id, verification_status, location.country
+- Indexes: user_id, verification_status, country
+- Searchable fields: company_name, user_id
 
-**buyer_profiles**
-
-- Primary key: id (uuid)
-- Foreign key: user_id → users.id
-- Indexes: user_id, verification_status, location.country
-
-**partner_directory**
+**buyer_profiles Table**
 
 - Primary key: id (uuid)
 - Foreign key: user_id → users.id
-- Indexes: country, industry (GIN), is_verified
-- Full-text search: company_name
+- Indexes: user_id, verification_status, country
+- Searchable fields: company_name, user_id
 
-**escrow_transactions**
-
-- Primary key: id (uuid)
-- Foreign key: order_id → orders.id
-- Indexes: order_id (unique), buyer_id, seller_id, status
-
-**shipment_tracking**
-
-- Primary key: id (uuid)
-- Foreign key: order_id → orders.id
-- Indexes: order_id (unique), tracking_number, status
-
-**verification_documents**
+**partner_profiles Table**
 
 - Primary key: id (uuid)
 - Foreign key: user_id → users.id
-- Stores document URLs and verification metadata
+- Indexes: country, is_verified
+- Searchable fields: company_name, user_id
+
+**escrow_transactions Table**
+
+- Primary key: id (uuid)
+- Foreign key: order_id → orders.id (unique)
+- Indexes: order_id (unique), status
+- Searchable fields: order_id
+
+**shipment_trackings Table**
+
+- Primary key: id (uuid)
+- Foreign key: order_id → orders.id (unique)
+- Indexes: order_id (unique), tracking_number
+- Searchable fields: order_id
 
 ### Data Relationships
 
