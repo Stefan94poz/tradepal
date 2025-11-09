@@ -17,4 +17,21 @@ module.exports = defineConfig({
       sslmode: "disable",
     },
   },
+  modules: [
+    {
+      resolve: "./modules/seller",
+    },
+    {
+      resolve: "./modules/buyer",
+    },
+    {
+      resolve: "./modules/partner",
+    },
+    {
+      resolve: "./modules/escrow",
+    },
+    {
+      resolve: "./modules/shipment",
+    },
+  ],
 });
