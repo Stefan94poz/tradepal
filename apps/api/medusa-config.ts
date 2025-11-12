@@ -19,6 +19,18 @@ module.exports = defineConfig({
   },
   modules: [
     {
+      resolve: "./modules/vendor",
+    },
+    {
+      resolve: "./modules/commission",
+    },
+    {
+      resolve: "./modules/rfq",
+    },
+    {
+      resolve: "./modules/messaging",
+    },
+    {
       resolve: "./modules/seller",
     },
     {

@@ -29,6 +29,7 @@ export default class MeiliSearchService {
         "title",
         "description",
         "handle",
+        "vendor_name",
         "metadata.seller_location",
         "metadata.min_order_quantity",
         "metadata.company_name",
@@ -38,6 +39,9 @@ export default class MeiliSearchService {
         "collection_id",
         "type_id",
         "status",
+        "vendor_id",
+        "vendor_handle",
+        "vendor_verification",
         "metadata.seller_location",
         "metadata.min_order_quantity",
         "metadata.seller_id",
@@ -68,6 +72,11 @@ export default class MeiliSearchService {
       created_at: product.created_at,
       updated_at: product.updated_at,
       metadata: product.metadata || {},
+      // Vendor metadata (from product-created/updated subscribers)
+      vendor_id: product.vendor_id || null,
+      vendor_handle: product.vendor_handle || null,
+      vendor_name: product.vendor_name || null,
+      vendor_verification: product.vendor_verification || null,
       variants: product.variants?.map((v: any) => ({
         id: v.id,
         title: v.title,
@@ -96,6 +105,11 @@ export default class MeiliSearchService {
       created_at: product.created_at,
       updated_at: product.updated_at,
       metadata: product.metadata || {},
+      // Vendor metadata
+      vendor_id: product.vendor_id || null,
+      vendor_handle: product.vendor_handle || null,
+      vendor_name: product.vendor_name || null,
+      vendor_verification: product.vendor_verification || null,
       variants: product.variants?.map((v: any) => ({
         id: v.id,
         title: v.title,
@@ -126,6 +140,22 @@ export default class MeiliSearchService {
     // Build filter string
     const filterParts: string[] = [];
 
+    // Vendor filters
+    if (filters?.vendor_id) {
+      filterParts.push(`vendor_id = "${filters.vendor_id}"`);
+    }
+
+    if (filters?.vendor_handle) {
+      filterParts.push(`vendor_handle = "${filters.vendor_handle}"`);
+    }
+
+    if (filters?.vendor_verification) {
+      filterParts.push(
+        `vendor_verification = "${filters.vendor_verification}"`
+      );
+    }
+
+    // Legacy seller filters (maintain backward compatibility)
     if (filters?.seller_location) {
       filterParts.push(
         `metadata.seller_location = "${filters.seller_location}"`
