@@ -6,19 +6,25 @@ mode: agent
 
 ## Overview
 
-The B2B marketplace platform will be built as a full-stack application using Medusa.js as the backend commerce engine and Next.js as the frontend framework. The architecture follows a headless commerce approach where Medusa.js provides the API layer for commerce operations, user management, and data persistence, while Next.js handles the presentation layer with server-side rendering for optimal SEO and performance.
+The **multi-vendor B2B marketplace platform** will be built as a full-stack application using **Medusa.js v2** as the backend commerce engine with **marketplace/multi-vendor architecture** and **Next.js 15** as the frontend framework. The architecture follows a headless commerce approach where Medusa.js provides the API layer for commerce operations, vendor management, order splitting, commission tracking, and data persistence, while Next.js handles the presentation layer with server-side rendering for optimal SEO and performance.
 
-The platform supports three distinct user roles (Sellers, Buyers, Administrators) with role-based access control. The system emphasizes trust and security through profile verification, escrow payments, and shipment tracking integrations.
+The platform supports three distinct user roles (**Vendors**, **Buyers**, **Administrators**) with role-based access control. The system emphasizes trust and security through profile verification, escrow payments (trade assurance), RFQ systems, multi-vendor order management, and shipment tracking integrations.
+
+**Inspired by**: Alibaba.com's B2B marketplace model with vendor storefronts, bulk pricing, RFQs, and trade assurance.
 
 ## Architecture
 
-### High-Level Architecture
+### High-Level Multi-Vendor Marketplace Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Next.js Frontend                      │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ Seller Pages │  │ Buyer Pages  │  │ Admin Pages  │     │
+│  │Vendor Pages  │  │ Buyer Pages  │  │ Admin Pages  │     │
+│  │ - Dashboard  │  │ - Search     │  │ - Vendors    │     │
+│  │ - Products   │  │ - RFQs       │  │ - Orders     │     │
+│  │ - Orders     │  │ - Cart       │  │ - Disputes   │     │
+│  │ - Analytics  │  │ - Messages   │  │ - Commission │     │
 │  └──────────────┘  └──────────────┘  └──────────────┘     │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │         Shared Components (shadcn/ui)                │  │
@@ -30,41 +36,65 @@ The platform supports three distinct user roles (Sellers, Buyers, Administrators
 ┌─────────────────────────────────────────────────────────────┐
 │                      Medusa.js Backend                       │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │              Custom Services Layer                    │  │
-│  │  • VerificationService  • EscrowService              │  │
-│  │  • PartnerSearchService • ShipmentTrackingService    │  │
+│  │         Marketplace Custom Modules Layer             │  │
+│  │  • VendorModule (vendors, vendor_admins)             │  │
+│  │  • BuyerModule (buyer profiles)                      │  │
+│  │  • PartnerModule (partner directory)                 │  │
+│  │  • EscrowModule (trade assurance)                    │  │
+│  │  • ShipmentModule (tracking)                         │  │
+│  │  • RFQModule (request for quotations)                │  │
+│  │  • CommissionModule (platform fees)                  │  │
+│  │  • MessagingModule (buyer-vendor chat)               │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │         Module Links (defineLink)                    │  │
+│  │  • Vendor <-> Product (one-to-many)                  │  │
+│  │  • Vendor <-> Order (parent order splitting)         │  │
+│  │  • Commission <-> VendorOrder                        │  │
 │  └──────────────────────────────────────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │              Core Medusa Services                     │  │
-│  │  • ProductService  • OrderService  • CustomerService │  │
+│  │  • ProductService  • OrderService  • AuthService     │  │
+│  │  • PaymentService  • CartService                     │  │
 │  └──────────────────────────────────────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │                  Database Layer                       │  │
-│  │              PostgreSQL with TypeORM                  │  │
+│  │              PostgreSQL with MikroORM                 │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
                             │
                     External Integrations
                             │
-        ┌───────────────────┼───────────────────┐
-        │                   │                   │
-   ┌────────┐         ┌──────────┐       ┌──────────┐
-   │Payment │         │Shipping  │       │File      │
-   │Gateway │         │Carriers  │       │Storage   │
-   └────────┘         └──────────┘       └──────────┘
+        ┌───────────────────┼───────────────────┬───────────────┐
+        │                   │                   │               │
+   ┌────────────┐     ┌──────────┐       ┌──────────┐   ┌─────────┐
+   │  Stripe    │     │Webshipper│       │  MinIO   │   │SendGrid │
+   │  Connect   │     │Multi-    │       │  S3      │   │Email    │
+   │  (Payouts) │     │Carrier   │       │  Storage │   │Notify   │
+   └────────────┘     └──────────┘       └──────────┘   └─────────┘
+        │
+   ┌────────────┐
+   │MeiliSearch │
+   │Product     │
+   │Search      │
+   └────────────┘
 ```
 
 ### Technology Stack Details
 
-- **Backend**: Medusa.js v2.x with Node.js
+- **Backend**: Medusa.js v2.x with Node.js (Marketplace architecture)
 - **Frontend**: Next.js 15 with App Router
 - **Database**: PostgreSQL 14+
 - **ORM**: MikroORM (Medusa v2 default)
 - **UI Framework**: Tailwind CSS + shadcn/ui
-- **Authentication**: Medusa Auth with JWT
-- **File Storage**: S3-compatible storage (AWS S3 or MinIO)
-- **Payment Processing**: Stripe or similar payment gateway
+- **Authentication**: Medusa Auth with JWT (vendor admins, buyers, admin users)
+- **File Storage**: MinIO (S3-compatible) for product images and verification documents
+- **Payment Processing**: Stripe with Stripe Connect for vendor payouts
+- **Search**: MeiliSearch for fast product and vendor search
+- **Shipping**: Webshipper for multi-carrier tracking
+- **Email**: SendGrid for transactional emails
 - **Caching**: Redis for session management and caching
+- **Analytics**: PostHog for event tracking
 
 ## Components and Interfaces
 
@@ -72,33 +102,61 @@ The platform supports three distinct user roles (Sellers, Buyers, Administrators
 
 #### 1. Custom Data Models (using Medusa v2 Data Model Language)
 
-**Seller Profile Model**
+**Vendor Model (Marketplace Core)**
 
 ```typescript
-// src/modules/seller/models/seller-profile.ts
+// src/modules/vendor/models/vendor.ts
 import { model } from "@medusajs/framework/utils";
 
-const SellerProfile = model.define("seller_profile", {
+const Vendor = model.define("vendor", {
   id: model.id().primaryKey(),
-  user_id: model.text().searchable(),
-  company_name: model.text().searchable(),
-  business_type: model.text(),
-  description: model.text(),
+  handle: model.text().searchable(), // Unique URL handle
+  name: model.text().searchable(),
+  logo: model.text().nullable(),
+  description: model.text().nullable(),
+  business_type: model.text(), // manufacturer, wholesaler, supplier
   country: model.text(),
   city: model.text(),
   address: model.text(),
-  certifications: model.array(), // Array of URLs
+  phone: model.text(),
+  email: model.text(),
+  website: model.text().nullable(),
+  certifications: model.array(), // Array of certification URLs
+  industries: model.array(), // Array of industry categories
   verification_status: model
-    .enum(["pending", "verified", "rejected"])
+    .enum(["pending", "basic", "verified", "premium"])
     .default("pending"),
-  verification_documents: model.array(), // Array of URLs
-  is_seller: model.boolean().default(true),
+  verification_documents: model.array(), // Array of document URLs
+  is_active: model.boolean().default(true),
+  commission_rate: model.number().default(5), // Platform commission %
+  created_at: model.dateTime().default("now"),
+  updated_at: model.dateTime().default("now"),
 });
 
-export default SellerProfile;
+export default Vendor;
 ```
 
-**Buyer Profile Model**
+**Vendor Admin Model**
+
+```typescript
+// src/modules/vendor/models/vendor-admin.ts
+import { model } from "@medusajs/framework/utils";
+import Vendor from "./vendor";
+
+const VendorAdmin = model.define("vendor_admin", {
+  id: model.id().primaryKey(),
+  email: model.text().searchable(),
+  first_name: model.text().nullable(),
+  last_name: model.text().nullable(),
+  vendor: model.belongsTo(() => Vendor, {
+    mappedBy: "admins",
+  }),
+});
+
+export default VendorAdmin;
+```
+
+**Buyer Profile Model (Enhanced)**
 
 ```typescript
 // src/modules/buyer/models/buyer-profile.ts
@@ -108,19 +166,168 @@ const BuyerProfile = model.define("buyer_profile", {
   id: model.id().primaryKey(),
   user_id: model.text().searchable(),
   company_name: model.text().searchable(),
-  business_interests: model.array(), // Array of strings
+  business_type: model.text(), // distributor, retailer, reseller
+  business_interests: model.array(), // Array of product categories
   business_needs: model.text(),
   country: model.text(),
   city: model.text(),
   address: model.text(),
+  phone: model.text(),
+  email: model.text(),
   verification_status: model
-    .enum(["pending", "verified", "rejected"])
+    .enum(["pending", "basic", "verified", "premium"])
     .default("pending"),
   verification_documents: model.array(), // Array of URLs
   is_buyer: model.boolean().default(true),
+  purchase_history_count: model.number().default(0),
+  created_at: model.dateTime().default("now"),
+  updated_at: model.dateTime().default("now"),
 });
 
 export default BuyerProfile;
+```
+
+**RFQ (Request for Quotation) Model**
+
+```typescript
+// src/modules/rfq/models/rfq.ts
+import { model } from "@medusajs/framework/utils";
+
+const RFQ = model
+  .define("rfq", {
+    id: model.id().primaryKey(),
+    buyer_id: model.text().searchable(),
+    product_name: model.text().searchable(),
+    product_description: model.text(),
+    quantity: model.number(),
+    target_unit_price: model.bigNumber().nullable(),
+    currency: model.text(),
+    delivery_timeline: model.text(), // "ASAP", "1-2 weeks", etc.
+    delivery_address: model.text(),
+    special_requirements: model.text().nullable(),
+    status: model
+      .enum(["open", "quoted", "accepted", "closed"])
+      .default("open"),
+    created_at: model.dateTime().default("now"),
+    expires_at: model.dateTime(),
+  })
+  .indexes([
+    {
+      on: ["buyer_id"],
+    },
+    {
+      on: ["status"],
+    },
+  ]);
+
+export default RFQ;
+```
+
+**RFQ Quotation Model**
+
+```typescript
+// src/modules/rfq/models/rfq-quotation.ts
+import { model } from "@medusajs/framework/utils";
+import RFQ from "./rfq";
+
+const RFQQuotation = model
+  .define("rfq_quotation", {
+    id: model.id().primaryKey(),
+    rfq: model.belongsTo(() => RFQ, {
+      mappedBy: "quotations",
+    }),
+    vendor_id: model.text().searchable(),
+    unit_price: model.bigNumber(),
+    total_price: model.bigNumber(),
+    minimum_order_quantity: model.number(),
+    lead_time: model.text(), // "7-10 days", etc.
+    payment_terms: model.text(), // "30% deposit, 70% on delivery"
+    valid_until: model.dateTime(),
+    notes: model.text().nullable(),
+    status: model
+      .enum(["pending", "accepted", "rejected", "expired"])
+      .default("pending"),
+    created_at: model.dateTime().default("now"),
+  })
+  .indexes([
+    {
+      on: ["vendor_id"],
+    },
+  ]);
+
+export default RFQQuotation;
+```
+
+**Commission Model**
+
+```typescript
+// src/modules/commission/models/commission.ts
+import { model } from "@medusajs/framework/utils";
+
+const Commission = model
+  .define("commission", {
+    id: model.id().primaryKey(),
+    vendor_id: model.text().searchable(),
+    order_id: model.text().searchable(),
+    order_total: model.bigNumber(),
+    commission_rate: model.number(), // Percentage
+    commission_amount: model.bigNumber(),
+    currency: model.text(),
+    status: model.enum(["pending", "calculated", "paid"]).default("pending"),
+    payout_id: model.text().nullable(), // Stripe payout ID
+    created_at: model.dateTime().default("now"),
+    paid_at: model.dateTime().nullable(),
+  })
+  .indexes([
+    {
+      on: ["vendor_id"],
+    },
+    {
+      on: ["order_id"],
+      unique: true,
+    },
+    {
+      on: ["status"],
+    },
+  ]);
+
+export default Commission;
+```
+
+**Message Model (Buyer-Vendor Communication)**
+
+```typescript
+// src/modules/messaging/models/message.ts
+import { model } from "@medusajs/framework/utils";
+
+const Message = model
+  .define("message", {
+    id: model.id().primaryKey(),
+    conversation_id: model.text().searchable(),
+    sender_id: model.text(),
+    sender_type: model.enum(["buyer", "vendor"]),
+    recipient_id: model.text(),
+    recipient_type: model.enum(["buyer", "vendor"]),
+    subject: model.text().nullable(),
+    body: model.text(),
+    attachments: model.array(), // Array of file URLs
+    is_read: model.boolean().default(false),
+    product_reference: model.text().nullable(),
+    created_at: model.dateTime().default("now"),
+  })
+  .indexes([
+    {
+      on: ["conversation_id"],
+    },
+    {
+      on: ["sender_id"],
+    },
+    {
+      on: ["recipient_id"],
+    },
+  ]);
+
+export default Message;
 ```
 
 **Partner Directory Profile Model**
@@ -133,7 +340,7 @@ const PartnerProfile = model
   .define("partner_profile", {
     id: model.id().primaryKey(),
     user_id: model.text().searchable(),
-    profile_type: model.enum(["seller", "buyer"]),
+    profile_type: model.enum(["vendor", "buyer"]),
     company_name: model.text().searchable(),
     country: model.text(),
     industry: model.array(), // Array of strings
@@ -164,7 +371,7 @@ const EscrowTransaction = model
     id: model.id().primaryKey(),
     order_id: model.text().searchable(),
     buyer_id: model.text(),
-    seller_id: model.text(),
+    vendor_id: model.text(), // Changed from seller_id
     amount: model.bigNumber(),
     currency: model.text(),
     status: model
@@ -221,9 +428,89 @@ const ShipmentTracking = model
 export default ShipmentTracking;
 ```
 
-#### 2. Custom Module Services (using Medusa v2 Service Factory)
+#### 2. Module Links (Critical for Marketplace Architecture)
 
-**SellerModule Service**
+Module links connect custom modules to Medusa core modules and each other. These links enable the multi-vendor marketplace functionality.
+
+**Vendor-Product Link** (One-to-Many)
+
+```typescript
+// src/links/vendor-product.ts
+import { defineLink } from "@medusajs/framework/utils";
+import VendorModule from "../modules/vendor";
+import ProductModule from "@medusajs/medusa/product";
+
+export default defineLink(VendorModule.linkable.vendor, {
+  linkable: ProductModule.linkable.product,
+  isList: true, // One vendor has many products
+});
+```
+
+**Usage**: Query products with vendor information:
+
+```typescript
+const { data: products } = await query.graph({
+  entity: "product",
+  fields: ["id", "title", "vendor.*"],
+  filters: { vendor_id: "vendor_123" },
+});
+```
+
+**Vendor-Order Link** (For Order Splitting)
+
+```typescript
+// src/links/vendor-order.ts
+import { defineLink } from "@medusajs/framework/utils";
+import VendorModule from "../modules/vendor";
+import OrderModule from "@medusajs/medusa/order";
+
+export default defineLink(VendorModule.linkable.vendor, {
+  linkable: OrderModule.linkable.order,
+  isList: true, // One vendor has many orders
+});
+```
+
+**Usage**: Retrieve vendor-specific orders:
+
+```typescript
+const { data: orders } = await query.graph({
+  entity: "order",
+  fields: ["*", "vendor.*"],
+  filters: { vendor_id: "vendor_123" },
+});
+```
+
+**VendorAdmin-User Link** (Authentication)
+
+```typescript
+// src/links/vendor-admin-user.ts
+import { defineLink } from "@medusajs/framework/utils";
+import VendorModule from "../modules/vendor";
+import UserModule from "@medusajs/medusa/user";
+
+export default defineLink(
+  VendorModule.linkable.vendor_admin,
+  UserModule.linkable.user
+);
+```
+
+**Commission-Order Link**
+
+```typescript
+// src/links/commission-order.ts
+import { defineLink } from "@medusajs/framework/utils";
+import CommissionModule from "../modules/commission";
+import OrderModule from "@medusajs/medusa/order";
+
+export default defineLink(
+  CommissionModule.linkable.commission,
+  OrderModule.linkable.order
+);
+```
+
+#### 3. Custom Module Services (using Medusa v2 Service Factory)
+
+**VendorModule Service** (Replaces SellerModule)
 
 ```typescript
 // src/modules/seller/service.ts

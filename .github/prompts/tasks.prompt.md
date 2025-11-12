@@ -4,16 +4,19 @@ mode: agent
 
 # Implementation Plan
 
-## Medusa v2 Development Notes
+## Medusa v2 Marketplace Development Notes
 
-This plan follows Medusa v2 architecture patterns:
+This plan follows Medusa v2 **multi-vendor marketplace architecture patterns**:
 
-- **Modules**: All custom features are built as modules with data models and services
+- **Vendor Module**: Core module for multi-vendor functionality with Vendor and VendorAdmin models
+- **Module Links**: Use `defineLink()` to connect vendors to products, orders, and commissions
 - **Data Model Language (DML)**: Use `model.define()` instead of TypeORM decorators
 - **MikroORM Migrations**: Generate migrations with `npx medusa db:generate <module-name>`
-- **Workflows**: Business logic uses workflow SDK with steps and compensation functions
-- **File-Based API Routes**: Routes are created as `route.ts` files in directory structures
+- **Workflows**: Business logic uses workflow SDK with steps and compensation functions for order splitting, commission calculation, and vendor payouts
+- **File-Based API Routes**: Routes created as `route.ts` files in directory structures (`/vendors/*`, `/admin/vendors/*`)
 - **Service Factory**: Services extend `MedusaService()` for auto-generated CRUD methods
+- **Order Splitting**: Parent orders automatically split into vendor-specific orders for fulfillment
+- **Commission Tracking**: Platform commission calculated and tracked per vendor order
 
 ## Implementation Tasks
 
@@ -21,22 +24,32 @@ This plan follows Medusa v2 architecture patterns:
   - Initialize Medusa v2 project with PostgreSQL and Redis configuration
   - Configure environment variables for database, Redis, and external services
   - Set up module directory structure in `src/modules/`
-  - Configure file storage with S3-compatible service
+  - Configure file storage with S3-compatible service (MinIO)
   - _Requirements: All requirements depend on proper project setup_
   - _Status: ✅ COMPLETED - Project structure exists, modules directory created_
 
-- [x] 2. Implement custom modules with data models (Medusa v2 DML)
-  - [x] 2.1 Create Seller Module with SellerProfile data model
-    - Create `src/modules/seller/models/seller-profile.ts` using `model.define()`
-    - Define fields: company_name, business_type, description, country, city, address, certifications, verification_status
-    - Create `src/modules/seller/service.ts` extending `MedusaService`
-    - Add custom methods: `submitVerification()`, `approveVerification()`, `rejectVerification()`
-    - Create `src/modules/seller/index.ts` with module definition and export
+- [ ] 2. Implement Vendor Module (Marketplace Core - Replaces Seller Module)
+  - [ ] 2.1 Create Vendor Module with Vendor and VendorAdmin models
+    - Create `src/modules/vendor/models/vendor.ts` using `model.define()`
+    - Define fields: handle, name, logo, description, business_type, country, city, address, phone, email, website, certifications, industries, verification_status, is_active, commission_rate
+    - Create `src/modules/vendor/models/vendor-admin.ts` with belongsTo relationship to Vendor
+    - Define fields: email, first_name, last_name, vendor (relationship)
+    - Create `src/modules/vendor/service.ts` extending `MedusaService`
+    - Add custom methods: `createVendor()`, `createVendorAdmin()`, `updateCommissionRate()`, `approveVerification()`
+    - Create `src/modules/vendor/index.ts` with module definition and export linkable entities
     - Register module in `medusa-config.ts`
-    - Generate migration: `npx medusa db:generate seller`
-    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
-    - _Status: ✅ COMPLETED_
-  - [x] 2.2 Create Buyer Module with BuyerProfile data model
+    - Generate migration: `npx medusa db:generate vendor`
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
+    - _Status: 🔄 IN PROGRESS - Replaces seller module with marketplace vendor module_
+  - [ ] 2.2 Create Module Links for Vendor-Product and Vendor-Order
+    - Create `src/links/vendor-product.ts` using `defineLink()`
+    - Link VendorModule.linkable.vendor to ProductModule.linkable.product with `isList: true`
+    - Create `src/links/vendor-order.ts` using `defineLink()`
+    - Link VendorModule.linkable.vendor to OrderModule.linkable.order with `isList: true`
+    - Create `src/links/vendor-admin-user.ts` for authentication linking
+    - Test module links using query.graph() to retrieve vendor products and orders
+    - _Requirements: 2.7, 7.1_
+    - _Status: ⏳ NOT STARTED - Critical for marketplace architecture_
     - Create `src/modules/buyer/models/buyer-profile.ts` using `model.define()`
     - Define fields: company_name, business_interests, business_needs, country, city, address, verification_status
     - Create `src/modules/buyer/service.ts` extending `MedusaService`

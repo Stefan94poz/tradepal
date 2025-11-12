@@ -1,17 +1,18 @@
 # Third-Party Integrations Guide
 
-This guide covers all third-party service integrations for the TradePal B2B marketplace platform using Medusa v2.
+This guide covers all third-party service integrations for the TradePal **multi-vendor B2B marketplace platform** using Medusa v2.
 
 ## Overview
 
 TradePal integrates with the following services:
 
-1. **MeiliSearch** - Product search and discovery
+1. **MeiliSearch** - Product search and discovery (multi-vendor support)
 2. **MinIO** - File storage for images and documents
-3. **PostHog** - Analytics and feature flags
+3. **PostHog** - Analytics and feature flags (marketplace events)
 4. **SendGrid** - Email notifications
 5. **Stripe** - Payment processing and escrow
-6. **Webshipper** - Multi-carrier shipment tracking
+6. **Stripe Connect** - Vendor payout management (NEW - Marketplace Critical)
+7. **Webshipper** - Multi-carrier shipment tracking
 
 ---
 
@@ -626,7 +627,413 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
 ---
 
-## 6. Webshipper Integration
+## 6. Stripe Connect Integration (Marketplace Critical)
+
+### Purpose
+
+Vendor payout management for the multi-vendor marketplace. Stripe Connect enables:
+
+- Automated vendor payouts
+- Platform commission deduction
+- Split payments between platform and vendors
+- Vendor onboarding and verification
+
+### Prerequisites
+
+**Stripe Account Setup**:
+
+1. Enable Stripe Connect on your Stripe Dashboard
+2. Choose Connect type: **Express** (recommended for TradePal)
+3. Configure platform settings and branding
+
+### Installation
+
+Stripe Connect uses the same `@medusajs/medusa-payment-stripe` package with additional configuration.
+
+```bash
+cd apps/api
+# Already installed if using Stripe for payments
+yarn add @medusajs/medusa-payment-stripe
+```
+
+### Configuration
+
+**Environment Variables (`.env`):**
+
+```env
+STRIPE_API_KEY=sk_test_your_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+STRIPE_CONNECT_ENABLED=true
+STRIPE_CONNECT_CLIENT_ID=ca_your_client_id
+```
+
+**medusa-config.ts:**
+
+```typescript
+import { defineConfig } from "@medusajs/framework/utils";
+
+export default defineConfig({
+  plugins: [
+    {
+      resolve: "@medusajs/medusa-payment-stripe",
+      options: {
+        api_key: process.env.STRIPE_API_KEY,
+        webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
+        // Stripe Connect configuration for marketplace
+        connect: {
+          enabled: true,
+          client_id: process.env.STRIPE_CONNECT_CLIENT_ID,
+          automatic_payouts: true,
+          payout_schedule: {
+            interval: "daily", // "daily", "weekly", or "monthly"
+            delay_days: 2, // Delay before payout
+          },
+        },
+      },
+    },
+  ],
+});
+```
+
+### Vendor Onboarding Flow
+
+**1. Create Connect Account for Vendor**
+
+```typescript
+// src/workflows/create-vendor/steps/create-connect-account.ts
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
+import Stripe from "stripe";
+
+type CreateConnectAccountInput = {
+  vendor_id: string;
+  email: string;
+  business_name: string;
+  country: string;
+};
+
+const createConnectAccountStep = createStep(
+  "create-connect-account",
+  async (input: CreateConnectAccountInput, { container }) => {
+    const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
+      apiVersion: "2023-10-16",
+    });
+
+    const account = await stripe.accounts.create({
+      type: "express",
+      email: input.email,
+      business_type: "company",
+      company: {
+        name: input.business_name,
+      },
+      country: input.country,
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      metadata: {
+        vendor_id: input.vendor_id,
+      },
+    });
+
+    return new StepResponse(
+      {
+        connect_account_id: account.id,
+      },
+      account.id
+    );
+  },
+  async (accountId, { container }) => {
+    if (!accountId) return;
+
+    const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
+      apiVersion: "2023-10-16",
+    });
+
+    // Delete account on rollback
+    await stripe.accounts.del(accountId);
+  }
+);
+
+export default createConnectAccountStep;
+```
+
+**2. Generate Account Onboarding Link**
+
+```typescript
+// src/api/vendors/connect/onboarding/route.ts
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import Stripe from "stripe";
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { vendor_id } = req.auth_context; // From authenticated vendor admin
+
+  const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
+    apiVersion: "2023-10-16",
+  });
+
+  // Get vendor's Connect account ID from database
+  const vendorModuleService = req.scope.resolve("vendorModuleService");
+  const vendor = await vendorModuleService.retrieveVendor(vendor_id);
+
+  if (!vendor.connect_account_id) {
+    return res.status(400).json({
+      error: "Vendor does not have a Connect account",
+    });
+  }
+
+  const accountLink = await stripe.accountLinks.create({
+    account: vendor.connect_account_id,
+    refresh_url: `${process.env.FRONTEND_URL}/vendors/dashboard/connect/refresh`,
+    return_url: `${process.env.FRONTEND_URL}/vendors/dashboard/connect/success`,
+    type: "account_onboarding",
+  });
+
+  res.json({
+    url: accountLink.url,
+  });
+}
+```
+
+**3. Update Vendor Model with Connect Account**
+
+```typescript
+// Add to vendor.ts model
+const Vendor = model.define("vendor", {
+  // ... existing fields
+  connect_account_id: model.text().nullable(),
+  connect_onboarding_complete: model.boolean().default(false),
+  connect_charges_enabled: model.boolean().default(false),
+  connect_payouts_enabled: model.boolean().default(false),
+});
+```
+
+### Commission Calculation and Payout
+
+**1. Calculate Commission on Order Completion**
+
+```typescript
+// src/workflows/complete-vendor-order/steps/calculate-commission.ts
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
+
+type CalculateCommissionInput = {
+  vendor_id: string;
+  order_id: string;
+  order_total: number;
+  currency: string;
+};
+
+const calculateCommissionStep = createStep(
+  "calculate-commission",
+  async (input: CalculateCommissionInput, { container }) => {
+    const vendorModuleService = container.resolve("vendorModuleService");
+    const commissionModuleService = container.resolve(
+      "commissionModuleService"
+    );
+
+    // Get vendor's commission rate
+    const vendor = await vendorModuleService.retrieveVendor(input.vendor_id);
+    const commissionRate = vendor.commission_rate || 5; // Default 5%
+
+    const commissionAmount = Math.round(
+      (input.order_total * commissionRate) / 100
+    );
+
+    // Create commission record
+    const commission = await commissionModuleService.createCommissions({
+      vendor_id: input.vendor_id,
+      order_id: input.order_id,
+      order_total: input.order_total,
+      commission_rate: commissionRate,
+      commission_amount: commissionAmount,
+      currency: input.currency,
+      status: "calculated",
+    });
+
+    return new StepResponse(commission);
+  }
+);
+
+export default calculateCommissionStep;
+```
+
+**2. Process Vendor Payout**
+
+```typescript
+// src/workflows/process-vendor-payout/index.ts
+import {
+  createWorkflow,
+  WorkflowResponse,
+} from "@medusajs/framework/workflows-sdk";
+import Stripe from "stripe";
+
+type ProcessPayoutInput = {
+  vendor_id: string;
+};
+
+const processVendorPayoutWorkflow = createWorkflow(
+  "process-vendor-payout",
+  (input: ProcessPayoutInput) => {
+    // Implementation steps:
+    // 1. Retrieve all "calculated" commissions for vendor
+    // 2. Calculate total sales and total commission
+    // 3. Calculate net payout (sales - commission)
+    // 4. Create Stripe payout to Connect account
+    // 5. Mark commissions as "paid"
+    // 6. Send payout confirmation email
+  }
+);
+```
+
+**Payout API Route**:
+
+```typescript
+// src/api/admin/vendors/[id]/payout/route.ts
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import { processVendorPayoutWorkflow } from "../../../../workflows/process-vendor-payout";
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { id: vendor_id } = req.params;
+
+  const { result } = await processVendorPayoutWorkflow(req.scope).run({
+    input: { vendor_id },
+  });
+
+  res.json({
+    payout: result,
+  });
+}
+```
+
+### Split Payments (Alternative to Separate Payouts)
+
+For real-time commission deduction during payment:
+
+```typescript
+// Create payment intent with application fee
+const stripe = new Stripe(process.env.STRIPE_API_KEY!);
+
+const paymentIntent = await stripe.paymentIntents.create({
+  amount: 10000, // $100.00
+  currency: "usd",
+  application_fee_amount: 500, // $5.00 commission (5%)
+  transfer_data: {
+    destination: vendor.connect_account_id,
+  },
+});
+```
+
+### Webhook Handling
+
+**Handle Connect Account Updates**:
+
+```typescript
+// src/api/webhooks/stripe-connect/route.ts
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import Stripe from "stripe";
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const stripe = new Stripe(process.env.STRIPE_API_KEY!);
+  const sig = req.headers["stripe-signature"];
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  const vendorModuleService = req.scope.resolve("vendorModuleService");
+
+  switch (event.type) {
+    case "account.updated":
+      const account = event.data.object;
+      const vendor_id = account.metadata.vendor_id;
+
+      await vendorModuleService.updateVendors(vendor_id, {
+        connect_charges_enabled: account.charges_enabled,
+        connect_payouts_enabled: account.payouts_enabled,
+        connect_onboarding_complete:
+          account.charges_enabled && account.payouts_enabled,
+      });
+      break;
+
+    case "payout.paid":
+      // Handle successful payout
+      break;
+
+    case "payout.failed":
+      // Handle failed payout
+      break;
+  }
+
+  res.json({ received: true });
+}
+```
+
+### Frontend Integration
+
+**Vendor Onboarding Button**:
+
+```tsx
+// apps/web/src/components/vendor/connect-onboarding.tsx
+"use client";
+
+import { useState } from "react";
+import { Button } from "@repo/ui/button";
+
+export function ConnectOnboardingButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handleOnboarding = async () => {
+    setLoading(true);
+    const response = await fetch("/api/vendors/connect/onboarding", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const { url } = await response.json();
+    window.location.href = url;
+  };
+
+  return (
+    <Button onClick={handleOnboarding} disabled={loading}>
+      {loading ? "Loading..." : "Complete Stripe Onboarding"}
+    </Button>
+  );
+}
+```
+
+### Testing
+
+**Test Mode Setup**:
+
+1. Use Stripe test API keys
+2. Create test Connect accounts
+3. Use test credit cards (4242 4242 4242 4242)
+4. Monitor events in Stripe Dashboard → Developers → Events
+
+**Test Payouts**:
+
+```bash
+# Trigger test payout via Stripe CLI
+stripe trigger payout.paid
+```
+
+### Documentation
+
+- [Stripe Connect Documentation](https://stripe.com/docs/connect)
+- [Express Accounts](https://stripe.com/docs/connect/express-accounts)
+- [Split Payments](https://stripe.com/docs/connect/charges#on-behalf-of)
+- [Account Onboarding](https://stripe.com/docs/connect/onboarding)
+- [Stripe CLI Testing](https://stripe.com/docs/stripe-cli)
+
+---
+
+## 7. Webshipper Integration
 
 ### Purpose
 
@@ -813,6 +1220,10 @@ SENDGRID_FROM_NAME=TradePal
 # Stripe
 STRIPE_API_KEY=sk_test_your_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# Stripe Connect (Marketplace)
+STRIPE_CONNECT_ENABLED=true
+STRIPE_CONNECT_CLIENT_ID=ca_your_client_id
 
 # Webshipper
 WEBSHIPPER_API_TOKEN=your_api_token
