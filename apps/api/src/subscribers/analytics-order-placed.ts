@@ -1,29 +1,22 @@
-import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework";
-import AnalyticsService from "../services/analytics";
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework";
+import { trackOrderPlacedWorkflow } from "../workflows/track-order-placed";
 
 /**
  * Analytics Subscriber - Order Placed
- * Tracks order placement events in PostHog
+ * Tracks order placement events in PostHog using Medusa Analytics Module
  */
 export default async function orderPlacedAnalyticsHandler({
   event: { data },
-}: SubscriberArgs<{
-  id: string;
-  customer_id: string;
-  total: number;
-  currency_code: string;
-}>) {
-  const analyticsService = new AnalyticsService();
-
+  container,
+}: SubscriberArgs<{ id: string }>) {
   try {
-    await analyticsService.trackEvent(data.customer_id, "Order Placed", {
-      order_id: data.id,
-      total: data.total,
-      currency: data.currency_code,
-      timestamp: new Date().toISOString(),
+    await trackOrderPlacedWorkflow(container).run({
+      input: {
+        order_id: data.id,
+      },
     });
 
-    console.log(`Tracked order placed event for customer ${data.customer_id}`);
+    console.log(`Tracked order placed event for order ${data.id}`);
   } catch (error) {
     console.error("Failed to track order placed event:", error);
   }

@@ -4,7 +4,60 @@ This document summarizes the third-party service integrations implemented for Tr
 
 ## Completed Integrations
 
-### 1. ✅ MeiliSearch - Product Search Engine
+### 1. ✅ PostHog Analytics (Using Medusa Analytics Module)
+
+**Purpose**: Track user behavior, events, and product analytics using Medusa's native Analytics Module
+
+**Integration Type**: Medusa Analytics Module Provider (not custom service)
+
+**Package**: `@medusajs/analytics-posthog` (built-in), `posthog-node` v5.11.2 (peer dependency)
+
+**Configuration**:
+
+```typescript
+// medusa-config.ts
+{
+  resolve: "@medusajs/medusa/analytics",
+  options: {
+    providers: [
+      {
+        resolve: "@medusajs/analytics-posthog",
+        id: "posthog",
+        options: {
+          posthogEventsKey: process.env.POSTHOG_EVENTS_API_KEY,
+          posthogHost: process.env.POSTHOG_HOST || "https://app.posthog.com",
+        },
+      },
+    ],
+  },
+}
+```
+
+**Environment Variables**:
+
+- `POSTHOG_EVENTS_API_KEY` - PostHog project API key (format: `phc_...`)
+- `POSTHOG_HOST` - PostHog instance URL (default: `https://app.posthog.com`)
+
+**Workflows Created**:
+
+- `src/workflows/track-order-placed.ts` - Tracks order placement events with customer and order details
+- `src/workflows/track-product-search.ts` - Tracks product search queries with filters and results
+
+**Subscribers Updated**:
+
+- `src/subscribers/analytics-order-placed.ts` - Executes track-order-placed workflow on `order.placed` event
+- `src/subscribers/analytics-product-search.ts` - Executes track-product-search workflow on `product.searched` event
+
+**Events Tracked**:
+
+- `order_placed` - When customer places an order (includes order ID, total, items, customer ID)
+- `product_search` - When users search for products (includes query, filters, results count)
+
+**Reference**: [Medusa PostHog Analytics Documentation](https://docs.medusajs.com/resources/infrastructure-modules/analytics/posthog)
+
+---
+
+### 2. ✅ MeiliSearch - Product Search Engine
 
 **Purpose**: Fast, typo-tolerant product search with B2B-specific filters
 

@@ -33,6 +33,22 @@ module.exports = defineConfig({
     {
       resolve: "./modules/shipment",
     },
+    {
+      resolve: "@medusajs/medusa/analytics",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/analytics-posthog",
+            id: "posthog",
+            options: {
+              posthogEventsKey: process.env.POSTHOG_EVENTS_API_KEY,
+              posthogHost:
+                process.env.POSTHOG_HOST || "https://app.posthog.com",
+            },
+          },
+        ],
+      },
+    },
     // TODO: Add real Stripe API keys to .env file!
     // Get keys from: https://dashboard.stripe.com/test/apikeys
     // Required: STRIPE_API_KEY (sk_test_...) and STRIPE_WEBHOOK_SECRET (whsec_...)
