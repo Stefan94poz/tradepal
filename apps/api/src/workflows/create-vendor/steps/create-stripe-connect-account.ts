@@ -26,9 +26,7 @@ export const createStripeConnectAccountStep = createStep(
     const stripeConnectEnabled = process.env.STRIPE_CONNECT_CLIENT_ID;
 
     if (!stripeApiKey || !stripeConnectEnabled) {
-      console.log(
-        "Stripe Connect not configured - skipping account creation"
-      );
+      console.log("Stripe Connect not configured - skipping account creation");
       return new StepResponse({ connect_account_id: null });
     }
 

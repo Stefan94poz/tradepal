@@ -180,14 +180,12 @@ const notifyVendorOfInquiryStep = createStep(
  */
 export const sendProductInquiryWorkflow = createWorkflow(
   "send-product-inquiry",
-  (
-    input: {
-      buyer_id: string;
-      product_id: string;
-      quantity?: number;
-      message: string;
-    }
-  ) => {
+  (input: {
+    buyer_id: string;
+    product_id: string;
+    quantity?: number;
+    message: string;
+  }) => {
     // Step 1: Validate product and get vendor
     const { product, vendor_id, vendor_name } = validateProductAndVendorStep({
       product_id: input.product_id,

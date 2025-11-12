@@ -14,9 +14,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   };
 
   try {
-    const messagingService: MessagingService = req.scope.resolve(
-      MESSAGING_MODULE
-    );
+    const messagingService: MessagingService =
+      req.scope.resolve(MESSAGING_MODULE);
 
     const { conversation, messages } = await messagingService.getConversation(
       conversation_id,

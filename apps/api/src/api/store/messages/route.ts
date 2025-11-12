@@ -6,19 +6,14 @@ import { sendMessageWorkflow } from "../../../workflows/send-message";
  * Buyer sends a message to a vendor
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const {
-    recipient_id,
-    subject,
-    body,
-    attachments,
-    product_reference,
-  } = req.body as {
-    recipient_id: string;
-    subject?: string;
-    body: string;
-    attachments?: string[];
-    product_reference?: string;
-  };
+  const { recipient_id, subject, body, attachments, product_reference } =
+    req.body as {
+      recipient_id: string;
+      subject?: string;
+      body: string;
+      attachments?: string[];
+      product_reference?: string;
+    };
 
   // TODO: Get authenticated buyer ID from session/token
   const buyer_id = "buyer_123"; // Placeholder

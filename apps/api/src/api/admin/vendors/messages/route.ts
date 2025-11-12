@@ -8,19 +8,14 @@ import MessagingService from "../../../../modules/messaging/service";
  * Vendor sends a message to a buyer
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const {
-    recipient_id,
-    subject,
-    body,
-    attachments,
-    product_reference,
-  } = req.body as {
-    recipient_id: string;
-    subject?: string;
-    body: string;
-    attachments?: string[];
-    product_reference?: string;
-  };
+  const { recipient_id, subject, body, attachments, product_reference } =
+    req.body as {
+      recipient_id: string;
+      subject?: string;
+      body: string;
+      attachments?: string[];
+      product_reference?: string;
+    };
 
   // TODO: Get authenticated vendor ID from session/token
   const vendor_id = "vendor_123"; // Placeholder
@@ -71,9 +66,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   };
 
   try {
-    const messagingService: MessagingService = req.scope.resolve(
-      MESSAGING_MODULE
-    );
+    const messagingService: MessagingService =
+      req.scope.resolve(MESSAGING_MODULE);
 
     const conversations = await messagingService.getConversations(
       vendor_id,

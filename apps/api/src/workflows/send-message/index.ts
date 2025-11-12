@@ -175,18 +175,16 @@ const sendMessageNotificationStep = createStep(
  */
 export const sendMessageWorkflow = createWorkflow(
   "send-message",
-  (
-    input: {
-      sender_id: string;
-      sender_type: "buyer" | "vendor";
-      recipient_id: string;
-      recipient_type: "buyer" | "vendor";
-      subject?: string;
-      body: string;
-      attachments?: string[];
-      product_reference?: string;
-    }
-  ) => {
+  (input: {
+    sender_id: string;
+    sender_type: "buyer" | "vendor";
+    recipient_id: string;
+    recipient_type: "buyer" | "vendor";
+    subject?: string;
+    body: string;
+    attachments?: string[];
+    product_reference?: string;
+  }) => {
     // Step 1: Validate participants
     validateParticipantsStep({
       sender_id: input.sender_id,

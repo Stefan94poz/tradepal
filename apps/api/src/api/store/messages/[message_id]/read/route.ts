@@ -10,9 +10,8 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
   const { message_id } = req.params;
 
   try {
-    const messagingService: MessagingService = req.scope.resolve(
-      MESSAGING_MODULE
-    );
+    const messagingService: MessagingService =
+      req.scope.resolve(MESSAGING_MODULE);
 
     const message = await messagingService.markAsRead(message_id);
 

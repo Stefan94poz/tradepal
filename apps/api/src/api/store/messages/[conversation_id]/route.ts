@@ -6,10 +6,7 @@ import MessagingService from "../../../../modules/messaging/service";
  * GET /store/messages/[conversation_id]
  * Get conversation history with messages
  */
-export async function GET(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { conversation_id } = req.params;
   const { limit = 50, offset = 0 } = req.query as {
     limit?: number;
@@ -17,9 +14,8 @@ export async function GET(
   };
 
   try {
-    const messagingService: MessagingService = req.scope.resolve(
-      MESSAGING_MODULE
-    );
+    const messagingService: MessagingService =
+      req.scope.resolve(MESSAGING_MODULE);
 
     const { conversation, messages } = await messagingService.getConversation(
       conversation_id,

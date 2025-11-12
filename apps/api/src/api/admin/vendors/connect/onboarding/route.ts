@@ -43,10 +43,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const accountLink = await stripe.accountLinks.create({
       account: vendor.connect_account_id,
       refresh_url:
-        refresh_url ||
-        `${process.env.ADMIN_URL}/vendors/connect/onboarding`,
-      return_url:
-        return_url || `${process.env.ADMIN_URL}/vendors/dashboard`,
+        refresh_url || `${process.env.ADMIN_URL}/vendors/connect/onboarding`,
+      return_url: return_url || `${process.env.ADMIN_URL}/vendors/dashboard`,
       type: "account_onboarding",
     });
 
