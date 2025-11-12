@@ -9,7 +9,7 @@ import { createEscrowRecordStep } from "./steps/create-escrow-record";
 type CreateEscrowInput = {
   orderId: string;
   buyerId: string;
-  sellerId: string;
+  vendorId: string; // Changed from sellerId
   amount: number;
   currency: string;
 };
@@ -33,7 +33,7 @@ export const createEscrowWorkflow = createWorkflow(
     const escrow = createEscrowRecordStep({
       orderId: input.orderId,
       buyerId: input.buyerId,
-      sellerId: input.sellerId,
+      vendorId: input.vendorId, // Changed from sellerId
       amount: input.amount,
       currency: input.currency,
       paymentIntentId: paymentIntentId as any,

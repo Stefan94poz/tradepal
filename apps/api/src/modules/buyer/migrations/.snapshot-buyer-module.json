@@ -33,6 +33,33 @@
           "nullable": false,
           "mappedType": "text"
         },
+        "business_type": {
+          "name": "business_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
         "business_interests": {
           "name": "business_interests",
           "type": "text[]",
@@ -88,7 +115,9 @@
           "default": "'pending'",
           "enumItems": [
             "pending",
+            "basic",
             "verified",
+            "premium",
             "rejected"
           ],
           "mappedType": "enum"
@@ -101,6 +130,16 @@
           "primary": false,
           "nullable": false,
           "mappedType": "array"
+        },
+        "purchase_history_count": {
+          "name": "purchase_history_count",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "0",
+          "mappedType": "integer"
         },
         "is_buyer": {
           "name": "is_buyer",

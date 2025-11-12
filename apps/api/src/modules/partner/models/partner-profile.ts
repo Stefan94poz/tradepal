@@ -4,7 +4,7 @@ const PartnerProfile = model
   .define("partner_profile", {
     id: model.id().primaryKey(),
     user_id: model.text().searchable(),
-    profile_type: model.enum(["seller", "buyer"]),
+    profile_type: model.enum(["vendor", "buyer"]), // Changed from "seller" to "vendor"
     company_name: model.text().searchable(),
     country: model.text(),
     industry: model.array(),

@@ -7,6 +7,7 @@ import { createVendorStep } from "./steps/create-vendor";
 import { createVendorAdminStep } from "./steps/create-vendor-admin";
 import { linkVendorAdminToUserStep } from "./steps/link-vendor-admin-to-user";
 import { sendVendorWelcomeEmailStep } from "./steps/send-welcome-email";
+import { createStripeConnectAccountStep } from "./steps/create-stripe-connect-account";
 
 export type CreateVendorInput = {
   handle: string;
@@ -48,7 +49,15 @@ export const createVendorWorkflow = createWorkflow(
       });
     }
 
-    // Step 5: Send welcome email with onboarding instructions
+    // Step 5: Create Stripe Connect account (if enabled)
+    const stripeAccount = createStripeConnectAccountStep({
+      vendor_id: vendor.id,
+      email: input.email,
+      country: input.country,
+      business_name: input.name,
+    });
+
+    // Step 6: Send welcome email with onboarding instructions
     sendVendorWelcomeEmailStep({
       vendor_id: vendor.id,
       email: input.email,
@@ -58,6 +67,7 @@ export const createVendorWorkflow = createWorkflow(
     return new WorkflowResponse({
       vendor,
       vendorAdmin,
+      connect_account_id: stripeAccount.connect_account_id,
     });
   }
 );

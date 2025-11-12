@@ -24,6 +24,15 @@
           "nullable": false,
           "mappedType": "text"
         },
+        "vendor_id": {
+          "name": "vendor_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
         "carrier": {
           "name": "carrier",
           "type": "text",
@@ -96,6 +105,16 @@
           "nullable": false,
           "mappedType": "json"
         },
+        "is_parent_order": {
+          "name": "is_parent_order",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "false",
+          "mappedType": "boolean"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamptz",
@@ -142,13 +161,13 @@
           "expression": "CREATE INDEX IF NOT EXISTS \"IDX_shipment_tracking_deleted_at\" ON \"shipment_tracking\" (\"deleted_at\") WHERE deleted_at IS NULL"
         },
         {
-          "keyName": "IDX_shipment_tracking_order_id_unique",
+          "keyName": "IDX_shipment_tracking_order_id",
           "columnNames": [],
           "composite": false,
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE UNIQUE INDEX IF NOT EXISTS \"IDX_shipment_tracking_order_id_unique\" ON \"shipment_tracking\" (\"order_id\") WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_shipment_tracking_order_id\" ON \"shipment_tracking\" (\"order_id\") WHERE deleted_at IS NULL"
         },
         {
           "keyName": "IDX_shipment_tracking_tracking_number",
@@ -158,6 +177,15 @@
           "primary": false,
           "unique": false,
           "expression": "CREATE INDEX IF NOT EXISTS \"IDX_shipment_tracking_tracking_number\" ON \"shipment_tracking\" (\"tracking_number\") WHERE deleted_at IS NULL"
+        },
+        {
+          "keyName": "IDX_shipment_tracking_vendor_id",
+          "columnNames": [],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_shipment_tracking_vendor_id\" ON \"shipment_tracking\" (\"vendor_id\") WHERE deleted_at IS NULL"
         },
         {
           "keyName": "shipment_tracking_pkey",

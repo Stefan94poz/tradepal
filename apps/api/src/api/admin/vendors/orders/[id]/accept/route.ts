@@ -55,7 +55,7 @@ export async function POST(
     const { result } = await acceptOrderWorkflow(req.scope).run({
       input: {
         orderId: orderId,
-        sellerId: body.vendor_id,
+        vendorId: body.vendor_id, // Changed from sellerId
         buyerId: orderData.customer_id || orderData.email,
         amount: orderData.total,
         currency: orderData.currency_code,

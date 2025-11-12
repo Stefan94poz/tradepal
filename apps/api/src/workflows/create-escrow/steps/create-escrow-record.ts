@@ -3,7 +3,7 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 type CreateEscrowRecordStepInput = {
   orderId: string;
   buyerId: string;
-  sellerId: string;
+  vendorId: string; // Changed from sellerId
   amount: number;
   currency: string;
   paymentIntentId: string;
@@ -12,7 +12,7 @@ type CreateEscrowRecordStepInput = {
 export const createEscrowRecordStep = createStep(
   "create-escrow-record-step",
   async (input: CreateEscrowRecordStepInput, { container }) => {
-    const { orderId, buyerId, sellerId, amount, currency, paymentIntentId } =
+    const { orderId, buyerId, vendorId, amount, currency, paymentIntentId } =
       input;
 
     const escrowModuleService = container.resolve("escrowModuleService");
@@ -21,7 +21,7 @@ export const createEscrowRecordStep = createStep(
     const escrow = await (escrowModuleService as any).createEscrow({
       order_id: orderId,
       buyer_id: buyerId,
-      seller_id: sellerId,
+      vendor_id: vendorId, // Changed from seller_id
       amount,
       currency,
       payment_intent_id: paymentIntentId,

@@ -9,13 +9,13 @@ import { Modules } from "@medusajs/framework/utils";
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { id } = req.params;
-    const { sellerId } = req.body as {
-      sellerId: string;
+    const { vendorId } = req.body as {
+      vendorId: string; // Changed from sellerId
     };
 
-    if (!sellerId) {
+    if (!vendorId) {
       return res.status(400).json({
-        error: "Missing required field: sellerId",
+        error: "Missing required field: vendorId",
       });
     }
 
@@ -31,7 +31,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       });
     }
 
-    // TODO: Verify sellerId matches the seller for this order
+    // TODO: Verify vendorId matches the vendor for this order
     // This would require order metadata or custom relations
 
     // Get order total from summary
@@ -42,7 +42,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const { result } = await acceptOrderWorkflow(req.scope).run({
       input: {
         orderId: id,
-        sellerId,
+        vendorId, // Changed from sellerId
         buyerId: order.customer_id || "",
         amount,
         currency,
@@ -53,7 +53,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       success: true,
       order: result.order,
       escrow: result.escrow,
-      message: `Order ${id} accepted by seller`,
+      message: `Order ${id} accepted by vendor`,
     });
   } catch (error) {
     res.status(500).json({

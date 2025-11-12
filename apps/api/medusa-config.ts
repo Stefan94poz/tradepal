@@ -87,6 +87,7 @@ module.exports = defineConfig({
     // TODO: Add real Stripe API keys to .env file!
     // Get keys from: https://dashboard.stripe.com/test/apikeys
     // Required: STRIPE_API_KEY (sk_test_...) and STRIPE_WEBHOOK_SECRET (whsec_...)
+    // For Stripe Connect: STRIPE_CONNECT_CLIENT_ID (from Connect settings)
     ...(process.env.STRIPE_API_KEY
       ? [
           {
@@ -101,6 +102,20 @@ module.exports = defineConfig({
                     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
                     // Automatic capture is disabled for escrow - we hold and capture manually
                     capture: false,
+                    // Stripe Connect configuration for vendor payouts
+                    ...(process.env.STRIPE_CONNECT_CLIENT_ID
+                      ? {
+                          stripeConnect: {
+                            enabled: true,
+                            clientId: process.env.STRIPE_CONNECT_CLIENT_ID,
+                            // Express accounts for vendors (simplified onboarding)
+                            accountType: "express",
+                            // Automatic payouts schedule (daily/weekly/monthly)
+                            payoutSchedule:
+                              process.env.STRIPE_PAYOUT_SCHEDULE || "weekly",
+                          },
+                        }
+                      : {}),
                   },
                 },
               ],

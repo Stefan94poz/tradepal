@@ -2,7 +2,7 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
 type UpdateEscrowStatusStepInput = {
   escrowId: string;
-  status: "held" | "released" | "disputed" | "refunded";
+  status: "held" | "released" | "disputed" | "refunded" | "partially_released";
   updatedBy: string;
 };
 
@@ -35,7 +35,7 @@ export const updateEscrowStatusStep = createStep(
         id: updatedEscrow.id,
         status: updatedEscrow.status,
         paymentIntentId: updatedEscrow.payment_intent_id,
-        sellerId: updatedEscrow.seller_id,
+        vendorId: updatedEscrow.vendor_id, // Changed from seller_id
         amount: updatedEscrow.amount,
         currency: updatedEscrow.currency,
       },

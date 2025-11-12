@@ -8,7 +8,7 @@ import { createEscrowWorkflow } from "../create-escrow";
 
 type AcceptOrderInput = {
   orderId: string;
-  sellerId: string;
+  vendorId: string; // Changed from sellerId
   buyerId: string;
   amount: number;
   currency: string;
@@ -28,7 +28,7 @@ export const acceptOrderWorkflow = createWorkflow(
       input: {
         orderId: input.orderId,
         buyerId: input.buyerId,
-        sellerId: input.sellerId,
+        vendorId: input.vendorId, // Changed from sellerId
         amount: input.amount,
         currency: input.currency,
       },
@@ -38,7 +38,7 @@ export const acceptOrderWorkflow = createWorkflow(
     notifyBuyerOrderAcceptedStep({
       orderId: input.orderId,
       buyerId: input.buyerId,
-      sellerId: input.sellerId,
+      vendorId: input.vendorId, // Changed from sellerId
     });
 
     return new WorkflowResponse({

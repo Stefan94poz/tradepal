@@ -5,13 +5,13 @@ type NotifyBuyerOrderAcceptedStepInput = {
   orderId: string;
   buyerId: string;
   buyerEmail?: string;
-  sellerId: string;
+  vendorId: string; // Changed from sellerId
 };
 
 export const notifyBuyerOrderAcceptedStep = createStep(
   "notify-buyer-order-accepted-step",
   async (input: NotifyBuyerOrderAcceptedStepInput, { container }) => {
-    const { orderId, buyerId, buyerEmail, sellerId } = input;
+    const { orderId, buyerId, buyerEmail, vendorId } = input;
 
     // Send email notification
     if (buyerEmail) {
@@ -29,7 +29,7 @@ export const notifyBuyerOrderAcceptedStep = createStep(
       }
     } else {
       console.log(
-        `[NOTIFICATION] Order ${orderId} accepted by seller ${sellerId}`
+        `[NOTIFICATION] Order ${orderId} accepted by vendor ${vendorId}`
       );
       console.log(`[NOTIFICATION] Notifying buyer ${buyerId}`);
     }

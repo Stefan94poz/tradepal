@@ -12,8 +12,6 @@ const Conversation = model.define("conversation", {
   participant_two_type: model.enum(["buyer", "vendor"]),
   product_reference: model.text().nullable(), // Optional product context
   last_message_at: model.dateTime().nullable(),
-  created_at: model.dateTime().default(new Date()),
-  updated_at: model.dateTime().default(new Date()),
 });
 
 export default Conversation;
